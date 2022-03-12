@@ -1,0 +1,41 @@
+{
+  "name": "ww-player",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "build": "tsc",
+    "ci": "(npm run build && npm run rollup) & npm t & wait",
+    "prepublishOnly": "npm run ci && npm run rollup",
+    "publish": "npm run prepublishOnly & npm publish",
+    "test": "jest",
+    "rollup": "rollup -c"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/wwheel/player.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/wwheel/player/issues"
+  },
+  "homepage": "https://github.com/wwheel/player#readme",
+  "dependencies": {
+    "dashjs": "~3.1.1",
+    "es6-promise": "^4.2.8",
+    "hls.js": "~0.13.2",
+    "panolens": "~0.11.0",
+    "videojs-vtt.js": "~0.15.2"
+  },
+  "devDependencies": {
+    "@types/jest": "^26.0.16",
+    "jest": "^26.6.3",
+    "rollup": "^2.34.1",
+    "rollup-plugin-babel-minify": "^10.0.0",
+    "rollup-plugin-commonjs": "^10.1.0",
+    "rollup-plugin-node-resolve": "^5.2.0",
+    "ts-jest": "^26.4.4",
+    "typescript": "^4.1.2"
+  }
+}
