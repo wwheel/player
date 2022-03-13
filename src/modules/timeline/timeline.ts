@@ -119,7 +119,7 @@ export default function (playerInstance, options)
         progressContainer.appendChild(previewContainerShadow);
     };
 
-    playerInstance.getThumbnailCoordinates = (second) =>
+    playerInstance.getThumbnailCoordinates = (second: number) =>
     {
         if (playerInstance.timelinePreviewData.length)
         {
@@ -220,7 +220,7 @@ export default function (playerInstance, options)
 
         if ('VTT' === timelinePreview.type && typeof timelinePreview.file === 'string')
         {
-            import(/* webpackChunkName: "webvtt" */ '../vendor/webvtt').then((it) =>
+            import(/* webpackChunkName: "webvtt" */ '../../vendor/webvtt').then((it) =>
             {
                 (window as any).WebVTTParser = it.default;
                 playerInstance.setupThumbnailPreviewVtt();

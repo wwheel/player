@@ -1,6 +1,6 @@
-export default class Utils
+export default function (playerInstance, options)
 {
-    isTouchDevice(): boolean
+    playerInstance.isTouchDevice = () =>
     {
         return !!('ontouchstart' in window        // works on most browsers
             || navigator.maxTouchPoints);       // works on IE10/11 and Surface
@@ -14,7 +14,7 @@ export default class Utils
      * @deprecated deprecated as of v3.0
      * @returns object
      */
-    getMobileOs(): {device: string, userOs: string, userOsVer: string, userOsMajor: string}
+    playerInstance.getMobileOs = () =>
     {
         const ua     = navigator.userAgent || '';
         const result = { device: null, userOs: null, userOsVer: null, userOsMajor: null };
@@ -75,7 +75,7 @@ export default class Utils
      *
      * @returns object
      */
-    getBrowserVersion(): {browserName: string, fullVersion: string, majorVersion: string, userOsMajor: string}
+    playerInstance.getBrowserVersion = () =>
     {
         const ua     = navigator.userAgent || '';
         const result = { browserName: null, fullVersion: null, majorVersion: null, userOsMajor: null };
@@ -162,7 +162,7 @@ export default class Utils
         return result;
     };
 
-    compareVersion(v1, v2): number|boolean
+    playerInstance.compareVersion = (v1, v2) =>
     {
         if (typeof v1 !== 'string') return false;
         if (typeof v2 !== 'string') return false;
@@ -177,9 +177,9 @@ export default class Utils
             if (v1[i] < v2[i]) return -1;
         }
         return v1.length === v2.length ? 0 : (v1.length < v2.length ? -1 : 1);
-    }
+    };
 
-    convertTimeStringToSeconds(str: string): boolean|number
+    playerInstance.convertTimeStringToSeconds = (str: string) =>
     {
         if (!(str && str.match(/^(\d){2}(:[0-5][0-9]){2}(.(\d){1,3})?$/)))
         {
@@ -191,24 +191,24 @@ export default class Utils
     };
 
     // Format time to hh:mm:ss
-    formatTime(duration: number): string
+    playerInstance.formatTime = (duration: number) =>
     {
         const formatDateObj = new Date(duration * 1000);
-        const formatHours   = this.pad(formatDateObj.getUTCHours());
-        const formatMinutes = this.pad(formatDateObj.getUTCMinutes());
-        const formatSeconds = this.pad(formatDateObj.getSeconds());
+        const formatHours   = playerInstance.pad(formatDateObj.getUTCHours());
+        const formatMinutes = playerInstance.pad(formatDateObj.getUTCMinutes());
+        const formatSeconds = playerInstance.pad(formatDateObj.getSeconds());
 
         return formatHours >= 1
             ? formatHours + ':' + formatMinutes + ':' + formatSeconds
             : formatMinutes + ':' + formatSeconds;
-    }
+    };
 
-    pad(value: number): string|number
+    playerInstance.pad = (value: number) =>
     {
         if (value < 10)
         {
             return '0' + value;
         }
         return value;
-    }
+    };
 }

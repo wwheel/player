@@ -253,7 +253,6 @@ export default function (playerInstance, options)
         {
             skipBtn.style.display = 'none';
         }
-
     };
 
     playerInstance.cardBoardMoveTimeInfo = () =>

@@ -1,28 +1,15 @@
-// Player modules
-import VPAIDModule from './modules/vpaid';
-import VASTModule from './modules/vast';
-import CardboardModule from './modules/cardboard';
-import SubtitleModule from './modules/subtitles';
-import TimelineModule from './modules/timeline';
-import AdSupportModule from './modules/adsupport';
-import StreamingModule from './modules/streaming';
-import { IDisplayOptions, IVastOptions } from './types/display-options';
+import Utils from './modules/utils/utils';
+import { IDisplayOptions, IVastOptions, WWPlayerModule } from './types/display-options';
 import { ICustomControlTags } from './types/custom-control-tags';
 import { ICustomControlTagsOptions } from './types/custom-control-tags-options';
 import { IPassedHtml } from './types/passed-html';
 import { IWWPlayer } from './types/wwplayer';
-import Utils from './modules/utils';
+import { ModulesRegistry } from './modules/registry';
+import { IUtils } from './modules/utils/type';
 
-// const WWP_MODULES = [
-//     VPAIDModule,
-//     VASTModule,
-//     CardboardModule,
-//     SubtitleModule,
-//     TimelineModule,
-//     AdSupportModule,
-//     StreamingModule,
-//     UtilsModule
-// ];
+const WWP_MODULES = [
+    Utils,
+];
 
 // Determine build mode
 // noinspection JSUnresolvedVariable
@@ -34,7 +21,7 @@ const WWP_RUNTIME_DEBUG = typeof WWP_DEBUG !== 'undefined' && WWP_DEBUG === true
 
 let playerInstances = 0;
 
-class Wwplayer extends Utils
+class Wwplayer
 {
     version: string;
     homepage: string;
@@ -90,7 +77,6 @@ class Wwplayer extends Utils
     initialAnimationSet: boolean;
     theatreMode: boolean;
     theatreModeAdvanced: boolean;
-    fullscreenMode: boolean;
     originalWidth: any;
     originalHeight: any;
     dashPlayer: any;
@@ -122,7 +108,6 @@ class Wwplayer extends Utils
      */
     constructor()
     {
-        super();
         this.domRef = {
             player: null
         };
@@ -136,20 +121,30 @@ class Wwplayer extends Utils
         this.destructors = [];
     }
 
-    init(playerTarget: HTMLVideoElement|string|String, options: IDisplayOptions): void
+    async init(playerTarget: HTMLVideoElement|string|String, options: IDisplayOptions): Promise<void>
     {
-        const self = this;
-
         // Install player modules and features
         const moduleOptions = {
             development: WWP_DEVELOPMENT_MODE,
             debug      : WWP_RUNTIME_DEBUG,
         };
 
-        // for (const playerModule of WWP_MODULES)
-        // {
-        //     playerModule(self, moduleOptions);
-        // }
+        if (Array.isArray(options.modules?.enabled))
+        {
+            for (const m of options.modules.enabled)
+            {
+                if (ModulesRegistry[m])
+                {
+                    const module = await ModulesRegistry[m]();
+                    WWP_MODULES.push(module);
+                }
+            }
+        }
+
+        for (const playerModule of WWP_MODULES)
+        {
+            playerModule(this, moduleOptions);
+        }
 
         let playerNode;
         if (playerTarget instanceof HTMLVideoElement)
@@ -246,7 +241,7 @@ class Wwplayer extends Utils
         this.inLineFound               = null;
         this.wwStorage                 = {};
         this.wwPseudoPause             = false;
-        this.mobileInfo                = this.getMobileOs();
+        this.mobileInfo                = (this as Wwplayer&IUtils).getMobileOs();
         this.events                    = {};
 
         //Default options

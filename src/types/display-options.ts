@@ -131,8 +131,20 @@ export interface ICaptions
     exitFullscreen?: string;
 }
 
+export enum WWPlayerModule
+{
+    VPAID     = 'VPAID',
+    VAST      = 'VAST',
+    Cardboard = 'Cardboard',
+    Subtitles = 'Subtitles',
+    Timeline  = 'Timeline',
+    AdSupport = 'AdSupport',
+    Streaming = 'Streaming'
+}
+
 export interface IModules
 {
+    enabled?: WWPlayerModule[];
     configureHls?: (options) => any;
     onBeforeInitHls?: (hls) => void;
     onAfterInitHls?: (hls) => void;
