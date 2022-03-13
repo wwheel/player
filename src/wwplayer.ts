@@ -103,6 +103,11 @@ class Wwplayer
     promiseTimeout: any;
     adFinished: boolean;
 
+    getUtils(): Wwplayer&IUtils
+    {
+        return this;
+    }
+
     /**
      * Constructor
      */
@@ -241,7 +246,7 @@ class Wwplayer
         this.inLineFound               = null;
         this.wwStorage                 = {};
         this.wwPseudoPause             = false;
-        this.mobileInfo                = (this as Wwplayer&IUtils).getMobileOs();
+        this.mobileInfo                = this.getUtils()?.getMobileOs();
         this.events                    = {};
 
         //Default options
