@@ -1,14 +1,14 @@
-if ('undefined' === typeof FP_HOMEPAGE)
+if ('undefined' === typeof WWP_HOMEPAGE)
 {
-  (global as any).FP_HOMEPAGE = 'https://fluidplayer.com';
+  (global as any).WWP_HOMEPAGE = 'https://wwplayer.com';
 }
 
-if ('undefined' === typeof FP_BUILD_VERSION)
+if ('undefined' === typeof WWP_BUILD_VERSION)
 {
-  (global as any).FP_BUILD_VERSION = 'v3';
+  (global as any).WWP_BUILD_VERSION = 'v3';
 }
 
-if ('undefined' === typeof FP_ENV)
+if ('undefined' === typeof WWP_ENV)
 {
   const isLocalhost = window
     && window.location
@@ -18,21 +18,21 @@ if ('undefined' === typeof FP_ENV)
 
   if (process && process.env && process.env.NODE_ENV)
   {
-    (global as any).FP_ENV = process.env.NODE_ENV;
+    (global as any).WWP_ENV = process.env.NODE_ENV;
   }
   else if (window && !isLocalhost)
   {
-    (global as any).FP_ENV = 'production';
+    (global as any).WWP_ENV = 'production';
   }
   else
   {
-    (global as any).FP_ENV = 'development';
+    (global as any).WWP_ENV = 'development';
   }
 }
 
-if ('undefined' === typeof FP_DEBUG)
+if ('undefined' === typeof WWP_DEBUG)
 {
-  (global as any).FP_DEBUG = false;
+  (global as any).WWP_DEBUG = false;
 }
 
 import './polyfills';

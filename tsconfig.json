@@ -1,11 +1,15 @@
 {
-  "compilerOptions": {
-    "outDir": "dist",
-    "lib": ["es2016", "dom"],
-    "sourceMap": true,
-    "declaration": true
-  },
-  "include": [
-    "src/**/*.ts"
-  ]
+    "compilerOptions": {
+        "outDir": "dist",
+        "lib": [
+            "es2016",
+            "dom"
+        ],
+        "sourceMap": true,
+        "declaration": true,
+        "experimentalDecorators": true
+    },
+    "include": [
+        "src/**/*.ts"
+    ]
 }
