@@ -52,7 +52,7 @@ export interface IAddSupport
 
     onPauseRoll?(event): void;
 
-    hasValidOnPauseAd?(): void;
+    hasValidOnPauseAd?(): boolean;
 
     toggleOnPauseAd?(): void;
 

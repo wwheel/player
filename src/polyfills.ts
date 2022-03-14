@@ -53,7 +53,7 @@ if (typeof Object.assign != 'function')
 
   CustomEvent.prototype = window['Event'].prototype;
 
-  window['CustomEvent'] = CustomEvent;
+  (window as any).CustomEvent = CustomEvent;
 })();
 
 // .remove() polyfill

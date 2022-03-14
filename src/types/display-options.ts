@@ -118,6 +118,7 @@ export interface IVastOptions
         vastVideoSkippedCallback?: () => void;
         vastVideoEndedCallback?: () => void;
     }
+    vpaid?: any;
 }
 
 export interface ICaptions

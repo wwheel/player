@@ -1,5 +1,5 @@
 import Utils from './modules/utils/utils';
-import { IDisplayOptions, IVastOptions, WWPlayerModule } from './types/display-options';
+import { IDisplayOptions, IVastOptions } from './types/display-options';
 import { ICustomControlTags } from './types/custom-control-tags';
 import { ICustomControlTagsOptions } from './types/custom-control-tags-options';
 import { IPassedHtml } from './types/passed-html';
@@ -557,9 +557,9 @@ class Wwplayer
 
             if (self.displayOptions.layoutControls.showCardBoardView)
             {
-                if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function')
+                if (typeof DeviceOrientationEvent !== 'undefined' && typeof (DeviceOrientationEvent as any).requestPermission === 'function')
                 {
-                    DeviceOrientationEvent.requestPermission()
+                    (DeviceOrientationEvent as any).requestPermission()
                         .then(function (response)
                         {
                             if (response === 'granted')
@@ -620,25 +620,19 @@ class Wwplayer
         };
 
         const videoPauseOriginal = playerNode.pause;
-        playerNode.pause         = function ()
-        {
-            if (this.isPlayingMedia === true)
-            {
-                this.isPlayingMedia = false;
+        playerNode.pause = function () {
+            if (self.isPlayingMedia === true) {
+                self.isPlayingMedia = false;
                 return videoPauseOriginal.apply(this, arguments);
             }
 
             // just in case
-            if (this.isCurrentlyPlayingVideo(this.domRef.player))
-            {
-                try
-                {
-                    this.isPlayingMedia = false;
+            if (self.isCurrentlyPlayingVideo(self.domRef.player)) {
+                try {
+                    self.isPlayingMedia = false;
                     return videoPauseOriginal.apply(this, arguments);
-                }
-                catch (e)
-                {
-                    this.announceLocalError(203, 'Failed to play video.');
+                } catch (e) {
+                    self.announceLocalError(203, 'Failed to play video.');
                 }
             }
         };
@@ -646,7 +640,7 @@ class Wwplayer
         if (!!this.displayOptions.layoutControls.autoPlay && !this.dashScriptLoaded && !this.hlsScriptLoaded)
         {
             //There is known issue with Safari 11+, will prevent autoPlay, so we wont try
-            const browserVersion = this.getBrowserVersion();
+            const browserVersion = this.getUtils().getBrowserVersion();
 
             if ('Safari' === browserVersion.browserName)
             {
@@ -766,14 +760,20 @@ class Wwplayer
 
             // play pre-roll ad
             // sometime pre-roll ad will be missed because we are clearing the timer
-            this.adKeytimePlay(Math.floor(this.mainVideoDuration));
+            if (this.getAddSupport()?.adKeytimePlay)
+            {
+                this.getAddSupport().adKeytimePlay(Math.floor(this.mainVideoDuration));
+            }
 
             clearInterval(this.timer);
         }
 
         if (!!this.displayOptions.layoutControls.loop)
         {
-            this.switchToMainVideo();
+            if (this.getAddSupport()?.switchToMainVideo)
+            {
+                this.getAddSupport().switchToMainVideo();
+            }
             this.playPauseToggle();
         }
     }
@@ -853,7 +853,7 @@ class Wwplayer
 
     checkShouldDisplayVolumeBar(): boolean
     {
-        return 'iOS' !== this.getMobileOs().userOs;
+        return 'iOS' !== this.getUtils().getMobileOs().userOs;
     }
 
     generateCustomControlTags(options: ICustomControlTagsOptions): ICustomControlTags
@@ -1141,7 +1141,7 @@ class Wwplayer
 
     controlDurationUpdate(id?: any): void
     {
-        const currentPlayTime = this.formatTime(this.domRef.player.currentTime);
+        const currentPlayTime = this.getUtils().formatTime(this.domRef.player.currentTime);
 
         let isLiveHls = false;
         if (this.hlsPlayer)
@@ -1158,7 +1158,7 @@ class Wwplayer
         }
         else
         {
-            const totalTime = this.formatTime(this.currentVideoDuration);
+            const totalTime = this.getUtils().formatTime(this.currentVideoDuration);
             durationText    = currentPlayTime + ' / ' + totalTime;
         }
 
@@ -1379,7 +1379,10 @@ class Wwplayer
             }
         }
 
-        this.resizeVpaidAuto();
+        if (this.getVPAID()?.resizeVpaidAuto)
+        {
+            this.getVPAID().resizeVpaidAuto();
+        }
     }
 
     findClosestParent(el: HTMLElement, selector: string): HTMLElement|null
@@ -1934,7 +1937,10 @@ class Wwplayer
                 if (this.isCurrentlyPlayingAd && this.vastOptions !== null && this.vastOptions.vpaid)
                 {
                     // resume the vpaid linear ad
-                    this.resumeVpaidAd();
+                    if (this.getVPAID()?.resumeVpaidAd)
+                    {
+                        this.getVPAID().resumeVpaidAd();
+                    }
                 }
                 else
                 {
@@ -1957,7 +1963,10 @@ class Wwplayer
                 if (this.isCurrentlyPlayingAd && this.vastOptions !== null && this.vastOptions.vpaid)
                 {
                     // pause the vpaid linear ad
-                    this.pauseVpaidAd();
+                    if (this.getVPAID()?.pauseVpaidAd)
+                    {
+                        this.getVPAID().pauseVpaidAd();
+                    }
                 }
                 else
                 {
@@ -1968,7 +1977,10 @@ class Wwplayer
                 this.playPauseAnimationToggle(false);
             }
 
-            this.toggleOnPauseAd();
+            if (this.getAddSupport()?.toggleOnPauseAd)
+            {
+                this.getAddSupport().toggleOnPauseAd();
+            }
         }
         else
         {
@@ -1978,7 +1990,7 @@ class Wwplayer
             // play() command, because it considers it not being triggered by the user.
             // The URL is hardcoded here to cover widest possible use cases.
             // If you know of an alternative workaround for this issue - let us know!
-            const browserVersion  = this.getBrowserVersion();
+            const browserVersion  = this.getUtils().getBrowserVersion();
             const isChromeAndroid = this.mobileInfo.userOs !== false
                 && this.mobileInfo.userOs === 'Android'
                 && browserVersion.browserName === 'Google Chrome';
@@ -1993,15 +2005,21 @@ class Wwplayer
             this.firstPlayLaunched = true;
 
             //trigger the loading of the VAST Tag
-            this.prepareVast('preRoll');
+            if (this.getVAST()?.prepareVast)
+            {
+                this.getVAST().prepareVast('preRoll');
+            }
             this.preRollAdPodsLength = preRolls.length;
         }
 
         const prepareVastAdsThatKnowDuration = () =>
         {
-            this.prepareVast('onPauseRoll');
-            this.prepareVast('postRoll');
-            this.prepareVast('midRoll');
+            if (this.getVAST()?.prepareVast)
+            {
+                this.getVAST().prepareVast('onPauseRoll');
+                this.getVAST().prepareVast('postRoll');
+                this.getVAST().prepareVast('midRoll');
+            }
         };
 
         if (isFirstStart)
@@ -2023,7 +2041,10 @@ class Wwplayer
             }
         }
 
-        this.adTimer();
+        if (this.getAddSupport()?.adTimer)
+        {
+            this.getAddSupport().adTimer();
+        }
 
         const blockOnPause = document.getElementById(this.videoPlayerId + '_ww_html_on_pause');
 
@@ -2071,7 +2092,7 @@ class Wwplayer
             this.controlDurationUpdate();
         });
 
-        const isMobileChecks = this.getMobileOs();
+        const isMobileChecks = this.getUtils().getMobileOs();
         const eventOn        = (isMobileChecks.userOs) ? 'touchstart' : 'mousedown';
 
         if (this.displayOptions.layoutControls.showCardBoardView)
@@ -2152,7 +2173,7 @@ class Wwplayer
                 const hoverQ            = this.getEventOffsetX(event, progressContainer);
 
                 const hoverSecondQ      = this.currentVideoDuration * hoverQ / totalWidth;
-                hoverTimeItem.innerText = this.formatTime(hoverSecondQ);
+                hoverTimeItem.innerText = this.getUtils().formatTime(hoverSecondQ);
 
                 hoverTimeItem.style.display = 'block';
                 hoverTimeItem.style.left    = (hoverSecondQ / this.domRef.player.duration * 100) + '%';
@@ -2300,7 +2321,10 @@ class Wwplayer
 
         this.setCustomControls();
 
-        this.setupThumbnailPreview();
+        if (this.getTimeline()?.setupThumbnailPreview)
+        {
+            this.getTimeline().setupThumbnailPreview();
+        }
 
         this.createTimePositionPreview();
 
@@ -2357,7 +2381,7 @@ class Wwplayer
     setLayout(): void
     {
         //All other browsers
-        const listenTo = (this.isTouchDevice()) ? 'touchend' : 'click';
+        const listenTo = (this.getUtils().isTouchDevice()) ? 'touchend' : 'click';
         this.domRef.player.addEventListener(listenTo, () => this.playPauseToggle(), false);
         //Mobile Safari - because it does not emit a click event on initial click of the video
         this.domRef.player.addEventListener('play', this.initialPlay, false);
@@ -2366,7 +2390,7 @@ class Wwplayer
 
     handleFullscreen(): void
     {
-        if (typeof document.vastFullsreenChangeEventListenersAdded !== 'undefined')
+        if (typeof document['vastFullsreenChangeEventListenersAdded'] !== 'undefined')
         {
             return;
         }
@@ -2375,10 +2399,13 @@ class Wwplayer
         {
             if (typeof (document['on' + eventType]) === 'object')
             {
-                document.addEventListener(eventType, ev =>
+                if (this.getVAST()?.recalculateAdDimensions)
                 {
-                    this.recalculateAdDimensions();
-                }, false);
+                    document.addEventListener(eventType, ev =>
+                    {
+                        this.getVAST().recalculateAdDimensions();
+                    }, false);
+                }
             }
         });
 
@@ -2390,7 +2417,7 @@ class Wwplayer
         const wrapper = document.createElement('div');
 
         wrapper.id        = 'ww_video_wrapper_' + this.videoPlayerId;
-        wrapper.className = this.isTouchDevice()
+        wrapper.className = this.getUtils().isTouchDevice()
             ? 'ww_video_wrapper mobile'
             : 'ww_video_wrapper';
 
@@ -2420,7 +2447,10 @@ class Wwplayer
         if (this.domRef.player.networkState === this.domRef.player.NETWORK_NO_SOURCE && this.isCurrentlyPlayingAd)
         {
             //Probably the video ad file was not loaded successfully
-            this.playMainVideoWhenVastFails(401);
+            if (this.getVAST()?.playMainVideoWhenVastFails)
+            {
+                this.getVAST().playMainVideoWhenVastFails(401);
+            }
         }
     }
 
@@ -2575,7 +2605,10 @@ class Wwplayer
         this.domRef.player.src                       = url;
         this.originalSrc                             = url;
         this.displayOptions.layoutControls.mediaType = this.getCurrentSrcType();
-        this.initialiseStreamers();
+        if (this.getStreaming()?.initialiseStreamers)
+        {
+            this.getStreaming().initialiseStreamers();
+        }
     }
 
     setCurrentTimeAndPlay(newCurrentTime: number, shouldPlay: boolean): void
@@ -2585,7 +2618,7 @@ class Wwplayer
             this.domRef.player.currentTime = newCurrentTime;
             this.domRef.player.removeEventListener('loadedmetadata', loadedMetadata);
             // Safari ios and mac fix to set currentTime
-            if (this.mobileInfo.userOs === 'iOS' || this.getBrowserVersion().browserName.toLowerCase() === 'safari')
+            if (this.mobileInfo.userOs === 'iOS' || this.getUtils().getBrowserVersion().browserName.toLowerCase() === 'safari')
             {
                 this.domRef.player.addEventListener('playing', videoPlayStart);
             }
@@ -2741,7 +2774,7 @@ class Wwplayer
     initHtmlOnPauseBlock(): void
     {
         //If onPauseRoll is defined than HtmlOnPauseBlock won't be shown
-        if (this.hasValidOnPauseAd())
+        if (this.getAddSupport()?.hasValidOnPauseAd && this.getAddSupport().hasValidOnPauseAd())
         {
             return;
         }
@@ -2877,7 +2910,7 @@ class Wwplayer
             }, this.displayOptions.layoutControls.controlBar.autoHideTimeout * 1000);
         }, 300);
 
-        const listenTo = (this.isTouchDevice())
+        const listenTo = (this.getUtils().isTouchDevice())
             ? ['touchstart', 'touchmove', 'touchend']
             : ['mousemove', 'mousedown', 'mouseup'];
 
@@ -2913,7 +2946,10 @@ class Wwplayer
     {
         if (this.isCurrentlyPlayingAd && !this.domRef.player.paused)
         {
-            this.toggleAdCountdown(true);
+            if (this.getAddSupport()?.toggleAdCountdown)
+            {
+                this.getAddSupport().toggleAdCountdown(true);
+            }
         }
 
         this.domRef.player.style.cursor = 'none';
@@ -2964,10 +3000,13 @@ class Wwplayer
     {
         if (this.isCurrentlyPlayingAd && !this.domRef.player.paused)
         {
-            this.toggleAdCountdown(false);
+            if (this.getAddSupport()?.toggleAdCountdown)
+            {
+                this.getAddSupport().toggleAdCountdown(false);
+            }
         }
 
-        if (!this.isTouchDevice())
+        if (!this.getUtils().isTouchDevice())
         {
             this.domRef.player.style.cursor = 'default';
         }
@@ -3235,7 +3274,10 @@ class Wwplayer
         event.initEvent(theatreEvent, false, true);
         this.domRef.player.dispatchEvent(event);
 
-        this.resizeVpaidAuto();
+        if (this.getVPAID()?.resizeVpaidAuto)
+        {
+            this.getVPAID().resizeVpaidAuto();
+        }
     }
 
     defaultTheatre(): void
