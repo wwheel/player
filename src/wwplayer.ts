@@ -2237,11 +2237,11 @@ class Wwplayer
             contextMenuList.appendChild(menuItemFullscreen);
         }
 
-        const menuItemVersion     = document.createElement('li');
-        menuItemVersion.id        = this.videoPlayerId + 'context_option_homepage';
-        menuItemVersion.innerHTML = 'WW Player ' + this.version;
-        menuItemVersion.addEventListener('click', () => window.open(this.homepage, '_blank'), false)
-        contextMenuList.appendChild(menuItemVersion);
+        // const menuItemVersion     = document.createElement('li');
+        // menuItemVersion.id        = this.videoPlayerId + 'context_option_homepage';
+        // menuItemVersion.innerHTML = 'WW Player ' + this.version;
+        // menuItemVersion.addEventListener('click', () => window.open(this.homepage, '_blank'), false)
+        // contextMenuList.appendChild(menuItemVersion);
 
         this.domRef.player.parentNode.insertBefore(divContextMenu, this.domRef.player.nextSibling);
 

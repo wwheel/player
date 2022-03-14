@@ -26,6 +26,17 @@
     var instance = wwPlayer('fluid-player-e2e-case', {
         modules: {
             enabled: ['Streaming']
+        },
+        layoutControls: {
+            contextMenu: {
+                controls: false,
+                links: [
+                    {
+                        href: 'https://google.com',
+                        label: 'google'
+                    }
+                ]
+            }
         }
     });
 </script>
