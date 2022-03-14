@@ -1,4 +1,5 @@
 import { IPassedHtml } from './passed-html';
+import { ILogo } from './display-options';
 
 export interface IWWPlayer
 {
@@ -14,4 +15,8 @@ export interface IWWPlayer
     dashInstance<T>(): T|null;
     hlsInstance<T>(): T|null;
     on(event: string, callback: (...events: any) => any): void;
+    toggleLogo(logo: ILogo): void|boolean;
+    isCurrentlyPlayingVideo(): boolean;
+    muteToggle(): void;
+    isMuted(): boolean;
 }

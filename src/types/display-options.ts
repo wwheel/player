@@ -163,4 +163,5 @@ export interface IDisplayOptions
     modules?: IModules;
     onBeforeXMLHttpRequestOpen?: (request) => void;
     onBeforeXMLHttpRequest?: (request) => void;
+    onInit?: () => void;
 }

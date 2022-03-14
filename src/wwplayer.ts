@@ -1,5 +1,5 @@
 import Utils from './modules/utils/utils';
-import { IDisplayOptions, IVastOptions } from './types/display-options';
+import { IDisplayOptions, ILogo, IVastOptions } from './types/display-options';
 import { ICustomControlTags } from './types/custom-control-tags';
 import { ICustomControlTagsOptions } from './types/custom-control-tags-options';
 import { IPassedHtml } from './types/passed-html';
@@ -175,23 +175,6 @@ class Wwplayer
             development: WWP_DEVELOPMENT_MODE,
             debug      : WWP_RUNTIME_DEBUG,
         };
-
-        if (Array.isArray(options.modules?.enabled))
-        {
-            for (const m of options.modules.enabled)
-            {
-                if (ModulesRegistry[m])
-                {
-                    const module = await ModulesRegistry[m]();
-                    WWP_MODULES.push(module);
-                }
-            }
-        }
-
-        for (const playerModule of WWP_MODULES)
-        {
-            playerModule(this, moduleOptions);
-        }
 
         let playerNode;
         if (playerTarget instanceof HTMLVideoElement)
@@ -438,6 +421,9 @@ class Wwplayer
                 {
                     console.debug('[WWP_DEBUG] Request made', request);
                 }
+            },
+            onInit: () =>
+            {
             }
         };
 
@@ -466,6 +452,23 @@ class Wwplayer
         }
 
         this.domRef.wrapper = this.setupPlayerWrapper();
+
+        if (Array.isArray(options.modules?.enabled))
+        {
+            for (const m of options.modules.enabled)
+            {
+                if (ModulesRegistry[m])
+                {
+                    const module = await ModulesRegistry[m]();
+                    WWP_MODULES.push(module);
+                }
+            }
+        }
+
+        for (const playerModule of WWP_MODULES)
+        {
+            playerModule(this, moduleOptions);
+        }
 
         if (this.getVAST()?.recalculateAdDimensions)
         {
@@ -583,7 +586,7 @@ class Wwplayer
                         clearTimeout(self.promiseTimeout);
                     }).catch(error =>
                     {
-                        console.error('[FP_ERROR] Playback error', error);
+                        console.error('[WWP_ERROR] Playback error', error);
                         const isAbortError = (typeof error.name !== 'undefined' && error.name === 'AbortError');
                         // Ignore abort errors which caused for example Safari or autoplay functions
                         // (example: interrupted by a new load request)
@@ -604,7 +607,7 @@ class Wwplayer
                     {
                         if (self.isPlayingMedia === false)
                         {
-                            self.announceLocalError(204, '[FP_ERROR] Timeout error. Failed to play video?');
+                            self.announceLocalError(204, '[WWP_ERROR] Timeout error. Failed to play video?');
                         }
                     }, 5000);
 
@@ -614,7 +617,7 @@ class Wwplayer
             }
             catch (error)
             {
-                console.error('[FP_ERROR] Playback error', error);
+                console.error('[WWP_ERROR] Playback error', error);
                 self.announceLocalError(201, 'Failed to play video.');
             }
         };
@@ -692,6 +695,8 @@ class Wwplayer
         catch (_ignored)
         {
         }
+
+        this.displayOptions.onInit();
     }
 
     getCurrentVideoDuration(): number
@@ -3621,7 +3626,7 @@ class Wwplayer
         }
     }
 
-    toggleLogo(logo): void|boolean
+    toggleLogo(logo: ILogo): void|boolean
     {
         if (typeof logo != 'object' || !logo.imageUrl)
         {
@@ -3796,6 +3801,26 @@ const wwPlayerInterface = function (instance: Wwplayer)
     this.hlsInstance = () =>
     {
         return !!instance.hlsPlayer ? instance.hlsPlayer : null;
+    };
+
+    this.isCurrentlyPlayingVideo = () =>
+    {
+        return instance.isCurrentlyPlayingVideo(instance.domRef.player);
+    };
+
+    this.toggleLogo = (logo: ILogo): void|boolean =>
+    {
+        return instance.toggleLogo(logo);
+    };
+
+    this.muteToggle = () =>
+    {
+        return instance.muteToggle();
+    };
+
+    this.isMuted = () =>
+    {
+        return instance.domRef.player.muted;
     };
 
     this.on = (event: string, callback: (...events: any) => any) =>
