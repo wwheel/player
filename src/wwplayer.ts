@@ -6,6 +6,7 @@ import { IPassedHtml } from './types/passed-html';
 import { IWWPlayer } from './types/wwplayer';
 import { ModulesRegistry } from './modules/registry';
 import { IUtils } from './modules/utils/type';
+import { ITimeline } from './modules/timeline/type';
 
 const WWP_MODULES = [
     Utils,
@@ -104,6 +105,11 @@ class Wwplayer
     adFinished: boolean;
 
     getUtils(): Wwplayer&IUtils
+    {
+        return this;
+    }
+
+    getTimeline(): Wwplayer&ITimeline
     {
         return this;
     }
