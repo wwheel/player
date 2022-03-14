@@ -35,6 +35,7 @@ if ('undefined' === typeof WWP_DEBUG)
   (global as any).WWP_DEBUG = false;
 }
 
+import './set-public-path';
 import './polyfills';
 import wwPlayerInitializer from './wwplayer';
 

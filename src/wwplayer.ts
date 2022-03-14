@@ -469,14 +469,14 @@ class Wwplayer
 
         if (this.getVAST()?.recalculateAdDimensions)
         {
-            playerNode.addEventListener('webkitfullscreenchange', this.getVAST().recalculateAdDimensions);
-            playerNode.addEventListener('fullscreenchange', this.getVAST().recalculateAdDimensions);
+            playerNode.addEventListener('webkitfullscreenchange', this.getVAST().recalculateAdDimensions.bind(this));
+            playerNode.addEventListener('fullscreenchange', this.getVAST().recalculateAdDimensions.bind(this));
         }
-        playerNode.addEventListener('waiting', this.onRecentWaiting);
-        playerNode.addEventListener('pause', this.onWWPlayerPause);
-        playerNode.addEventListener('loadedmetadata', this.mainVideoReady);
-        playerNode.addEventListener('error', this.onErrorDetection);
-        playerNode.addEventListener('ended', this.onMainVideoEnded);
+        playerNode.addEventListener('waiting', this.onRecentWaiting.bind(this));
+        playerNode.addEventListener('pause', this.onWWPlayerPause.bind(this));
+        playerNode.addEventListener('loadedmetadata', this.mainVideoReady.bind(this));
+        playerNode.addEventListener('error', this.onErrorDetection.bind(this));
+        playerNode.addEventListener('ended', this.onMainVideoEnded.bind(this));
         playerNode.addEventListener('durationchange', () =>
         {
             this.currentVideoDuration = this.getCurrentVideoDuration();
@@ -654,16 +654,16 @@ class Wwplayer
 
         if (!this.mobileInfo.userOs)
         {
-            videoWrapper.addEventListener('mouseleave', this.handleMouseleave, false);
-            videoWrapper.addEventListener('mouseenter', this.showControlBar, false);
-            videoWrapper.addEventListener('mouseenter', this.showTitle, false);
+            videoWrapper.addEventListener('mouseleave', this.handleMouseleave.bind(this), false);
+            videoWrapper.addEventListener('mouseenter', this.showControlBar.bind(this), false);
+            videoWrapper.addEventListener('mouseenter', this.showTitle.bind(this), false);
         }
         else
         {
             //On mobile mouseleave behavior does not make sense, so it's better to keep controls, once the playback starts
             //Autohide behavior on timer is a separate functionality
             this.hideControlBar();
-            videoWrapper.addEventListener('touchstart', this.showControlBar, false);
+            videoWrapper.addEventListener('touchstart', this.showControlBar.bind(this), false);
         }
 
         //Keyboard Controls
@@ -1599,10 +1599,10 @@ class Wwplayer
             this.wwPseudoPause = false;
         };
 
-        document.addEventListener('mouseup', onProgressbarMouseUp);
-        document.addEventListener('touchend', onProgressbarMouseUp);
-        document.addEventListener('mousemove', onProgressbarMouseMove);
-        document.addEventListener('touchmove', onProgressbarMouseMove);
+        document.addEventListener('mouseup', onProgressbarMouseUp.bind(this));
+        document.addEventListener('touchend', onProgressbarMouseUp.bind(this));
+        document.addEventListener('mousemove', onProgressbarMouseMove.bind(this));
+        document.addEventListener('touchmove', onProgressbarMouseMove.bind(this));
     }
 
     onVolumeBarMouseDown(): void
@@ -1655,10 +1655,10 @@ class Wwplayer
             }
         };
 
-        document.addEventListener('mouseup', onVolumeBarMouseUp);
-        document.addEventListener('touchend', onVolumeBarMouseUp);
-        document.addEventListener('mousemove', onVolumeBarMouseMove);
-        document.addEventListener('touchmove', onVolumeBarMouseMove);
+        document.addEventListener('mouseup', onVolumeBarMouseUp.bind(this));
+        document.addEventListener('touchend', onVolumeBarMouseUp.bind(this));
+        document.addEventListener('mousemove', onVolumeBarMouseMove.bind(this));
+        document.addEventListener('touchmove', onVolumeBarMouseMove.bind(this));
     }
 
     findRoll(roll): string[]
@@ -1842,7 +1842,7 @@ class Wwplayer
 
     keyboardControl(): void
     {
-        this.domRef.wrapper.addEventListener('click', this.handleMouseenterForKeyboard, false);
+        this.domRef.wrapper.addEventListener('click', this.handleMouseenterForKeyboard.bind(this), false);
 
         // When we click outside player, we stop registering keyboard events
         const clickHandler = this.handleWindowClick.bind(this);
@@ -2037,7 +2037,7 @@ class Wwplayer
             }
             else
             {
-                this.domRef.player.addEventListener('mainVideoDurationSet', prepareVastAdsThatKnowDuration);
+                this.domRef.player.addEventListener('mainVideoDurationSet', prepareVastAdsThatKnowDuration.bind(this));
             }
         }
 
@@ -2314,7 +2314,7 @@ class Wwplayer
 
         if (this.displayOptions.layoutControls.doubleclickFullscreen)
         {
-            this.domRef.player.addEventListener('dblclick', this.fullscreenToggle);
+            this.domRef.player.addEventListener('dblclick', this.fullscreenToggle.bind(this));
         }
 
         this.initHtmlOnPauseBlock();
@@ -2384,7 +2384,7 @@ class Wwplayer
         const listenTo = (this.getUtils().isTouchDevice()) ? 'touchend' : 'click';
         this.domRef.player.addEventListener(listenTo, () => this.playPauseToggle(), false);
         //Mobile Safari - because it does not emit a click event on initial click of the video
-        this.domRef.player.addEventListener('play', this.initialPlay, false);
+        this.domRef.player.addEventListener('play', this.initialPlay.bind(this), false);
         this.setDefaultLayout();
     }
 
@@ -2620,7 +2620,7 @@ class Wwplayer
             // Safari ios and mac fix to set currentTime
             if (this.mobileInfo.userOs === 'iOS' || this.getUtils().getBrowserVersion().browserName.toLowerCase() === 'safari')
             {
-                this.domRef.player.addEventListener('playing', videoPlayStart);
+                this.domRef.player.addEventListener('playing', videoPlayStart.bind(this));
             }
 
             if (shouldPlay)
@@ -2644,7 +2644,7 @@ class Wwplayer
             this.domRef.player.removeEventListener('playing', videoPlayStart);
         };
 
-        this.domRef.player.addEventListener('loadedmetadata', loadedMetadata, false);
+        this.domRef.player.addEventListener('loadedmetadata', loadedMetadata.bind(this), false);
         this.domRef.player.load();
     }
 
@@ -2823,7 +2823,7 @@ class Wwplayer
             this.playPauseToggle();
             containerDiv.removeEventListener('click', initPlayFunction);
         };
-        containerDiv.addEventListener('click', initPlayFunction);
+        containerDiv.addEventListener('click', initPlayFunction.bind(this));
 
         // If the user has chosen to not show the play button we'll make it invisible
         // We don't hide altogether because animations might still be used
@@ -3053,11 +3053,11 @@ class Wwplayer
 
     linkControlBarUserActivity(): void
     {
-        this.domRef.player.addEventListener('userInactive', this.hideControlBar);
-        this.domRef.player.addEventListener('userInactive', this.hideTitle);
+        this.domRef.player.addEventListener('userInactive', this.hideControlBar.bind(this));
+        this.domRef.player.addEventListener('userInactive', this.hideTitle.bind(this));
 
-        this.domRef.player.addEventListener('userActive', this.showControlBar);
-        this.domRef.player.addEventListener('userActive', this.showTitle);
+        this.domRef.player.addEventListener('userActive', this.showControlBar.bind(this));
+        this.domRef.player.addEventListener('userActive', this.showTitle.bind(this));
     }
 
     initMute(): void

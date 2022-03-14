@@ -23,7 +23,7 @@ const getDistOptions = (mode) => {
         case 'development':
             return {
                 path: path.resolve(__dirname, 'dist'),
-                publicPath: '/'
+                publicPath: `auto`
             };
         case 'current':
             return {
@@ -38,7 +38,7 @@ const getDistOptions = (mode) => {
         default:
             throw 'Unknown distribution type provided in --dist!';
     }
-}
+};
 
 // Webpack configuration
 module.exports = (env, argv) => {
@@ -100,6 +100,8 @@ module.exports = (env, argv) => {
             ]
         ));
     }
+
+    console.log('wpDistOptions-', wpDistOptions);
 
     return {
         devServer: {
