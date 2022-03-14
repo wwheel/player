@@ -1,104 +1,104 @@
 export interface IAddSupport
 {
-    renderLinearAd(adListId, backupTheVideoTime): void;
+    renderLinearAd?(adListId, backupTheVideoTime): void;
 
-    playRoll(adListId): void;
+    playRoll?(adListId): void;
 
-    backupMainVideoContentTime(adListId): void;
+    backupMainVideoContentTime?(adListId): void;
 
-    getSupportedMediaFileObject(mediaFiles): void;
+    getSupportedMediaFileObject?(mediaFiles): void;
 
-    getMediaFileTypeSupportLevel(mediaType): void;
+    getMediaFileTypeSupportLevel?(mediaType): void;
 
-    scheduleTrackingEvent(currentTime, duration): void;
+    scheduleTrackingEvent?(currentTime, duration): void;
 
-    trackSingleEvent(eventType, eventSubType): void;
+    trackSingleEvent?(eventType, eventSubType): void;
 
-    completeNonLinearStatic(adListId): void;
+    completeNonLinearStatic?(adListId): void;
 
-    createNonLinearStatic(adListId): void;
+    createNonLinearStatic?(adListId): void;
 
-    createVpaidNonLinearBoard(adListId): void;
+    createVpaidNonLinearBoard?(adListId): void;
 
-    createNonLinearBoard(adListId): void;
+    createNonLinearBoard?(adListId): void;
 
-    createBoard(adListId): void;
+    createBoard?(adListId): void;
 
-    closeNonLinear(adListId): void;
+    closeNonLinear?(adListId): void;
 
-    rollGroupContainsLinear(groupedRolls): void;
+    rollGroupContainsLinear?(groupedRolls): void;
 
-    rollGroupContainsNonlinear(groupedRolls): void;
+    rollGroupContainsNonlinear?(groupedRolls): void;
 
-    preRollFail(): void;
+    preRollFail?(): void;
 
-    preRollSuccess(): void;
+    preRollSuccess?(): void;
 
-    preRollAdsPlay(): void;
+    preRollAdsPlay?(): void;
 
-    preRoll(event): void;
+    preRoll?(event): void;
 
-    createAdMarker(adListId, time): void;
+    createAdMarker?(adListId, time): void;
 
-    hideAdMarker(adListId): void;
+    hideAdMarker?(adListId): void;
 
-    showAdMarkers(): void;
+    showAdMarkers?(): void;
 
-    hideAdMarkers(): void;
+    hideAdMarkers?(): void;
 
-    midRoll(event): void;
+    midRoll?(event): void;
 
-    postRoll(event): void;
+    postRoll?(event): void;
 
-    onPauseRoll(event): void;
+    onPauseRoll?(event): void;
 
-    hasValidOnPauseAd(): void;
+    hasValidOnPauseAd?(): void;
 
-    toggleOnPauseAd(): void;
+    toggleOnPauseAd?(): void;
 
-    trackingOnPauseNonLinearAd(adListId, status): void;
+    trackingOnPauseNonLinearAd?(adListId, status): void;
 
-    getLinearAdsFromKeyTime(keyTimeLinearObj): void;
+    getLinearAdsFromKeyTime?(keyTimeLinearObj): void;
 
-    adKeytimePlay(keyTime): void;
+    adKeytimePlay?(keyTime): void;
 
-    adTimer(): void;
+    adTimer?(): void;
 
-    scheduleTask(task): void;
+    scheduleTask?(task): void;
 
-    switchToMainVideo(): void;
+    switchToMainVideo?(): void;
 
-    getNextAdPod(): void;
+    getNextAdPod?(): void;
 
-    checkForNextAd(): void;
+    checkForNextAd?(): void;
 
-    addSkipButton(): void;
+    addSkipButton?(): void;
 
-    addAdCountdown(): void;
+    addAdCountdown?(): void;
 
-    decreaseAdCountdown(): void;
+    decreaseAdCountdown?(): void;
 
-    removeAdCountdown(): void;
+    removeAdCountdown?(): void;
 
-    toggleAdCountdown(showing): void;
+    toggleAdCountdown?(showing): void;
 
-    addAdPlayingText(textToShow): void;
+    addAdPlayingText?(textToShow): void;
 
-    positionTextElements(adListData): void;
+    positionTextElements?(adListData): void;
 
-    removeAdPlayingText(): void;
+    removeAdPlayingText?(): void;
 
-    addCTAButton(landingPage): void;
+    addCTAButton?(landingPage): void;
 
-    removeCTAButton(): void;
+    removeCTAButton?(): void;
 
-    decreaseSkipOffset(): void;
+    decreaseSkipOffset?(): void;
 
-    pressSkipButton(): void;
+    pressSkipButton?(): void;
 
-    removeSkipButton(): void;
+    removeSkipButton?(): void;
 
-    addClickthroughLayer(): void;
+    addClickthroughLayer?(): void;
 
-    removeClickthrough(): void;
+    removeClickthrough?(): void;
 }

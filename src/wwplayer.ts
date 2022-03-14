@@ -7,6 +7,12 @@ import { IWWPlayer } from './types/wwplayer';
 import { ModulesRegistry } from './modules/registry';
 import { IUtils } from './modules/utils/type';
 import { ITimeline } from './modules/timeline/type';
+import { IVast } from './modules/vast/type';
+import { IVpaid } from './modules/vpaid/type';
+import { ISubtitles } from './modules/subtitles/type';
+import { IStreaming } from './modules/streaming/type';
+import { ICardboard } from './modules/cardboard/type';
+import { IAddSupport } from './modules/adsupport/type';
 
 const WWP_MODULES = [
     Utils,
@@ -110,6 +116,36 @@ class Wwplayer
     }
 
     getTimeline(): Wwplayer&ITimeline
+    {
+        return this;
+    }
+
+    getVAST(): Wwplayer&IVast
+    {
+        return this;
+    }
+
+    getVPAID(): Wwplayer&IVpaid
+    {
+        return this;
+    }
+
+    getSubtitles(): Wwplayer&ISubtitles
+    {
+        return this;
+    }
+
+    getStreaming(): Wwplayer&IStreaming
+    {
+        return this;
+    }
+
+    getCardboard(): Wwplayer&ICardboard
+    {
+        return this;
+    }
+
+    getAddSupport(): Wwplayer&IAddSupport
     {
         return this;
     }
@@ -431,8 +467,11 @@ class Wwplayer
 
         this.domRef.wrapper = this.setupPlayerWrapper();
 
-        playerNode.addEventListener('webkitfullscreenchange', this.recalculateAdDimensions);
-        playerNode.addEventListener('fullscreenchange', this.recalculateAdDimensions);
+        if (this.getVAST()?.recalculateAdDimensions)
+        {
+            playerNode.addEventListener('webkitfullscreenchange', this.getVAST().recalculateAdDimensions);
+            playerNode.addEventListener('fullscreenchange', this.getVAST().recalculateAdDimensions);
+        }
         playerNode.addEventListener('waiting', this.onRecentWaiting);
         playerNode.addEventListener('pause', this.onWWPlayerPause);
         playerNode.addEventListener('loadedmetadata', this.mainVideoReady);
@@ -480,22 +519,32 @@ class Wwplayer
 
         this.createVideoSourceSwitch();
 
-        this.createSubtitles();
+        if (this.getSubtitles()?.createSubtitles)
+        {
+            this.getSubtitles().createSubtitles();
+        }
 
-        this.createCardboard();
+        if (this.getCardboard()?.createCardboard)
+        {
+            this.getCardboard().createCardboard();
+        }
 
         this.userActivityChecker();
 
-        this.setVastList();
+        if (this.getVAST()?.setVastList)
+        {
+            this.getVAST().setVastList();
+        }
 
         this.setPersistentSettings();
 
         // DO NOT initialize streamers if there are pre-rolls. It will break the streamers!
         // Streamers will re-initialize once ad has been shown.
         const preRolls = this.findRoll('preRoll');
-        if (!preRolls || 0 === preRolls.length)
+        const notRolls = !preRolls || 0 === preRolls.length;
+        if (notRolls && this.getStreaming()?.initialiseStreamers)
         {
-            this.initialiseStreamers();
+            this.getStreaming().initialiseStreamers();
         }
 
         const _play_videoPlayer = playerNode.play;

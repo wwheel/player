@@ -1,28 +1,28 @@
 export interface ICardboard
 {
-    createCardboardJoystickButton(identity: string): HTMLButtonElement;
+    createCardboardJoystickButton?(identity: string): HTMLButtonElement;
 
-    cardboardRotateLeftRight(param: number): void;
+    cardboardRotateLeftRight?(param: number): void;
 
-    cardboardRotateUpDown(param: number): void;
+    cardboardRotateUpDown?(param: number): void;
 
-    createCardboardJoystick(): void;
+    createCardboardJoystick?(): void;
 
-    cardBoardResize(): void;
+    cardBoardResize?(): void;
 
-    cardBoardSwitchToNormal(): void;
+    cardBoardSwitchToNormal?(): void;
 
-    cardBoardHideDefaultControls(): void;
+    cardBoardHideDefaultControls?(): void;
 
-    cardBoardCreateVRControls(): void;
+    cardBoardCreateVRControls?(): void;
 
-    cardBoardSwitchToVR(): void;
+    cardBoardSwitchToVR?(): void;
 
-    cardBoardMoveTimeInfo(): void;
+    cardBoardMoveTimeInfo?(): void;
 
-    cardBoardAlterDefaultControls(): void;
+    cardBoardAlterDefaultControls?(): void;
 
-    createCardboardView(): void;
+    createCardboardView?(): void;
 
-    createCardboard(): void;
+    createCardboard?(): void;
 }
