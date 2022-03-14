@@ -176,6 +176,23 @@ class Wwplayer
             debug      : WWP_RUNTIME_DEBUG,
         };
 
+        if (Array.isArray(options.modules?.enabled))
+        {
+            for (const m of options.modules.enabled)
+            {
+                if (ModulesRegistry[m])
+                {
+                    const module = await ModulesRegistry[m]();
+                    WWP_MODULES.push(module);
+                }
+            }
+        }
+
+        for (const playerModule of WWP_MODULES)
+        {
+            playerModule(this, moduleOptions);
+        }
+
         let playerNode;
         if (playerTarget instanceof HTMLVideoElement)
         {
@@ -452,23 +469,6 @@ class Wwplayer
         }
 
         this.domRef.wrapper = this.setupPlayerWrapper();
-
-        if (Array.isArray(options.modules?.enabled))
-        {
-            for (const m of options.modules.enabled)
-            {
-                if (ModulesRegistry[m])
-                {
-                    const module = await ModulesRegistry[m]();
-                    WWP_MODULES.push(module);
-                }
-            }
-        }
-
-        for (const playerModule of WWP_MODULES)
-        {
-            playerModule(this, moduleOptions);
-        }
 
         if (this.getVAST()?.recalculateAdDimensions)
         {
