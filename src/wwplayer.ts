@@ -601,7 +601,6 @@ class Wwplayer
                         clearTimeout(self.promiseTimeout);
                     }).catch(error =>
                     {
-                        console.log('muted', self.domRef.player.muted);
                         console.error('[WWP_ERROR] Playback error', error);
                         const isAbortError = (typeof error.name !== 'undefined' && error.name === 'AbortError');
                         // Ignore abort errors which caused for example Safari or autoplay functions
@@ -661,12 +660,6 @@ class Wwplayer
                 }
             }
         };
-
-        console.log({
-            autoPlay: this.displayOptions.layoutControls.autoPlay,
-            dashScriptLoaded: this.dashScriptLoaded,
-            hlsScriptLoaded: this.hlsScriptLoaded
-        });
 
         if (!!this.displayOptions.layoutControls.autoPlay && !this.dashScriptLoaded && !this.hlsScriptLoaded)
         {
@@ -2239,10 +2232,12 @@ class Wwplayer
 
         if (!!extraLinks)
         {
+            let count = 0;
             for (const link of extraLinks)
             {
+                count++;
                 const linkItem     = document.createElement('li');
-                linkItem.id        = this.videoPlayerId + 'context_option_play';
+                linkItem.id        = this.videoPlayerId + 'context_option_custom_' + count;
                 linkItem.innerHTML = link.label;
                 linkItem.addEventListener('click', () => window.open(link.href, '_blank'), false);
                 contextMenuList.appendChild(linkItem);
