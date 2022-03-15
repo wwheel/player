@@ -19,4 +19,5 @@ export interface IWWPlayer
     isCurrentlyPlayingVideo(): boolean;
     muteToggle(): void;
     isMuted(): boolean;
+    getCurrentProgramDateTime(): Date;
 }

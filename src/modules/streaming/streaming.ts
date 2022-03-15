@@ -106,6 +106,32 @@ export default function (playerInstance, options)
         }
     };
 
+    playerInstance.onHlsFragChanged = (event: string, data: {frag: any}) =>
+    {
+        const eventFrag = new CustomEvent('wwFragChanged', {
+            detail: {
+                frag: data.frag
+            }
+        });
+        playerInstance.domRef.player.dispatchEvent(eventFrag);
+
+        clearInterval(playerInstance.currentProgramDateTimeInterval);
+        const dateTime                                = data.frag.programDateTime;
+        const cloneDate                               = () => new Date(new Date(dateTime).toISOString());
+        let count                                     = 0;
+        playerInstance.currentProgramDateTime         = cloneDate();
+        playerInstance.currentProgramDateTimeInterval = setInterval(() =>
+        {
+            count++;
+            const date = cloneDate();
+            date.setSeconds(date.getSeconds() + count);
+            if (date.getTime() > playerInstance.currentProgramDateTime.getTime())
+            {
+                playerInstance.currentProgramDateTime = date;
+            }
+        }, 1000);
+    };
+
     playerInstance.initialiseHls = () =>
     {
         if (Hls.isSupported())
@@ -135,6 +161,8 @@ export default function (playerInstance, options)
             {
                 playerInstance.domRef.player.play();
             }
+
+            hls.on(Hls.Events.FRAG_CHANGED, playerInstance.onHlsFragChanged);
         }
         else
         {
@@ -152,6 +180,7 @@ export default function (playerInstance, options)
         }
         else if (playerInstance.hlsPlayer)
         {
+            playerInstance.hlsPlayer.off(Hls.Events.FRAG_CHANGED, playerInstance.handleHlsProgramDateTime);
             playerInstance.hlsPlayer.detachMedia();
             playerInstance.hlsPlayer = false;
         }

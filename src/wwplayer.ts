@@ -112,6 +112,8 @@ class Wwplayer
     videoSources: {title: string; url: string; isHD: boolean}[];
     promiseTimeout: any;
     adFinished: boolean;
+    currentProgramDateTime: Date;
+    currentProgramDateTimeInterval: any;
 
     getCanAutoplay(): Wwplayer&ICanAutoplay
     {
@@ -974,11 +976,17 @@ class Wwplayer
         controls.rightContainer.className = 'ww_controls_right';
         controls.root.appendChild(controls.rightContainer);
 
-        // Right container -> Fullscreen
-        controls.fullscreen           = document.createElement('div');
-        controls.fullscreen.id        = this.videoPlayerId + '_ww_control_fullscreen';
-        controls.fullscreen.className = 'ww_button ww_control_fullscreen ww_button_fullscreen';
-        controls.rightContainer.appendChild(controls.fullscreen);
+        if (
+            this.displayOptions.layoutControls.controlFullscreen ||
+            typeof this.displayOptions.layoutControls.controlFullscreen !== 'boolean'
+        )
+        {
+            // Right container -> Fullscreen
+            controls.fullscreen           = document.createElement('div');
+            controls.fullscreen.id        = this.videoPlayerId + '_ww_control_fullscreen';
+            controls.fullscreen.className = 'ww_button ww_control_fullscreen ww_button_fullscreen';
+            controls.rightContainer.appendChild(controls.fullscreen);
+        }
 
         // Right container -> Theatre
         controls.theatre           = document.createElement('div');
@@ -1359,49 +1367,56 @@ class Wwplayer
             this.theatreToggle();
         }
 
-        let functionNameToExecute;
-
-        if (requestFullscreenFunctionNames)
+        if (typeof this.displayOptions.layoutControls.fullscreenHandler === 'function')
         {
-            // iOS fullscreen elements are different and so need to be treated separately
-            if ((requestFullscreenFunctionNames as any).goFullscreen === 'webkitEnterFullscreen')
-            {
-                if (!videoPlayerTag[(requestFullscreenFunctionNames as any).isFullscreen])
-                {
-                    functionNameToExecute = 'videoPlayerTag.' + (requestFullscreenFunctionNames as any).goFullscreen + '();';
-                    this.fullscreenOn(fullscreenButton, menuOptionFullscreen);
-                    new Function('videoPlayerTag', functionNameToExecute)(videoPlayerTag);
-                }
-            }
-            else
-            {
-                if (document[(requestFullscreenFunctionNames as any).isFullscreen] === null)
-                {
-                    //Go fullscreen
-                    functionNameToExecute = 'videoPlayerTag.' + (requestFullscreenFunctionNames as any).goFullscreen + '();';
-                    this.fullscreenOn(fullscreenButton, menuOptionFullscreen);
-                }
-                else
-                {
-                    //Exit fullscreen
-                    functionNameToExecute = 'document.' + (requestFullscreenFunctionNames as any).exitFullscreen + '();';
-                    this.fullscreenOff(fullscreenButton, menuOptionFullscreen);
-                }
-                new Function('videoPlayerTag', functionNameToExecute)(fullscreenTag);
-            }
+            this.displayOptions.layoutControls.fullscreenHandler();
         }
         else
         {
-            //The browser does not support the Fullscreen API, so a pseudo-fullscreen implementation is used
-            if (fullscreenTag.className.search(/\bpseudo_fullscreen\b/g) !== -1)
+            let functionNameToExecute;
+
+            if (requestFullscreenFunctionNames)
             {
-                fullscreenTag.className = fullscreenTag.className.replace(/\bpseudo_fullscreen\b/g, '');
-                this.fullscreenOff(fullscreenButton, menuOptionFullscreen);
+                // iOS fullscreen elements are different and so need to be treated separately
+                if ((requestFullscreenFunctionNames as any).goFullscreen === 'webkitEnterFullscreen')
+                {
+                    if (!videoPlayerTag[(requestFullscreenFunctionNames as any).isFullscreen])
+                    {
+                        functionNameToExecute = 'videoPlayerTag.' + (requestFullscreenFunctionNames as any).goFullscreen + '();';
+                        this.fullscreenOn(fullscreenButton, menuOptionFullscreen);
+                        new Function('videoPlayerTag', functionNameToExecute)(videoPlayerTag);
+                    }
+                }
+                else
+                {
+                    if (document[(requestFullscreenFunctionNames as any).isFullscreen] === null)
+                    {
+                        //Go fullscreen
+                        functionNameToExecute = 'videoPlayerTag.' + (requestFullscreenFunctionNames as any).goFullscreen + '();';
+                        this.fullscreenOn(fullscreenButton, menuOptionFullscreen);
+                    }
+                    else
+                    {
+                        //Exit fullscreen
+                        functionNameToExecute = 'document.' + (requestFullscreenFunctionNames as any).exitFullscreen + '();';
+                        this.fullscreenOff(fullscreenButton, menuOptionFullscreen);
+                    }
+                    new Function('videoPlayerTag', functionNameToExecute)(fullscreenTag);
+                }
             }
             else
             {
-                fullscreenTag.className += ' pseudo_fullscreen';
-                this.fullscreenOn(fullscreenButton, menuOptionFullscreen);
+                //The browser does not support the Fullscreen API, so a pseudo-fullscreen implementation is used
+                if (fullscreenTag.className.search(/\bpseudo_fullscreen\b/g) !== -1)
+                {
+                    fullscreenTag.className = fullscreenTag.className.replace(/\bpseudo_fullscreen\b/g, '');
+                    this.fullscreenOff(fullscreenButton, menuOptionFullscreen);
+                }
+                else
+                {
+                    fullscreenTag.className += ' pseudo_fullscreen';
+                    this.fullscreenOn(fullscreenButton, menuOptionFullscreen);
+                }
             }
         }
 
@@ -3656,6 +3671,9 @@ class Wwplayer
             case 'durationchange':
                 this.domRef.player.addEventListener('durationchange', functionCall);
                 break;
+            case 'hlsFragChanged':
+                this.domRef.player.addEventListener('wwFragChanged', functionCall);
+                break;
             default:
                 console.log('[WWP_ERROR] Event not recognised');
                 break;
@@ -3857,6 +3875,11 @@ const wwPlayerInterface = function (instance: Wwplayer)
     this.isMuted = () =>
     {
         return instance.domRef.player.muted;
+    };
+
+    this.getCurrentProgramDateTime = () =>
+    {
+        return instance.currentProgramDateTime;
     };
 
     this.on = (event: string, callback: (...events: any) => any) =>

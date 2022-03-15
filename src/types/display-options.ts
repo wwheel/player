@@ -92,6 +92,8 @@ export interface ILayoutControls
     htmlOnPauseBlock?: IHtmlOnPauseBlock;
     persistentSettings?: IPersistentSettings;
     controlForwardBackward?: IControlForwardBackward;
+    fullscreenHandler?: () => void;
+    controlFullscreen?: boolean;
     contextMenu?: IContextMenu;
 }
 
