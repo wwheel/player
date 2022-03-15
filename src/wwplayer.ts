@@ -442,6 +442,9 @@ class Wwplayer
                 },
                 onAfterInitDash : (dash) =>
                 {
+                },
+                onAfterAllModulesInit: () =>
+                {
                 }
             },
             onBeforeXMLHttpRequestOpen: (request) =>
@@ -454,9 +457,6 @@ class Wwplayer
                     console.debug('[WWP_DEBUG] Request made', request);
                 }
             },
-            onInit                    : () =>
-            {
-            }
         };
 
         // Overriding the default options
@@ -724,7 +724,7 @@ class Wwplayer
         {
         }
 
-        this.displayOptions.onInit();
+        this.displayOptions.modules.onAfterAllModulesInit();
     }
 
     getCurrentVideoDuration(): number

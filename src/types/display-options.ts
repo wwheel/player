@@ -152,6 +152,7 @@ export interface IModules
     configureDash?: (options) => any;
     onBeforeInitDash?: (dash) => void;
     onAfterInitDash?: (dash) => void;
+    onAfterAllModulesInit?: () => void;
 }
 
 export interface IDisplayOptions
@@ -163,5 +164,4 @@ export interface IDisplayOptions
     modules?: IModules;
     onBeforeXMLHttpRequestOpen?: (request) => void;
     onBeforeXMLHttpRequest?: (request) => void;
-    onInit?: () => void;
 }

@@ -26,7 +26,11 @@
 <script>
     var instance = wwPlayer('fluid-player-e2e-case', {
         modules: {
-            enabled: ['Streaming']
+            enabled: ['Streaming'],
+            onAfterAllModulesInit: () =>
+            {
+                console.log('onAfterAllModulesInit');
+            }
         },
         layoutControls: {
             autoPlay: true,
@@ -41,10 +45,6 @@
                 ]
             }
         },
-        onInit: () =>
-        {
-            // trackHls();
-        }
     });
 
     function trackHls() {
