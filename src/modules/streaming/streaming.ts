@@ -9,42 +9,49 @@ if (typeof window !== 'undefined' && !(window as any).dashjs)
 
 export default function (playerInstance, options)
 {
-    playerInstance.initialiseStreamers = () =>
+    playerInstance.initialiseStreamers = (): Promise<void> =>
     {
-        playerInstance.detachStreamers();
-        switch (playerInstance.displayOptions.layoutControls.mediaType)
+        return new Promise<void>(resolve =>
         {
-            case 'application/dash+xml': // MPEG-DASH
-                if (!playerInstance.dashScriptLoaded && (!(window as any).dashjs || (window as any).dashjs.isDefaultSubject))
-                {
-                    playerInstance.dashScriptLoaded = true;
-                    import(/* webpackChunkName: "dashjs" */ 'dashjs').then((it: any) =>
+            playerInstance.detachStreamers();
+            switch (playerInstance.displayOptions.layoutControls.mediaType)
+            {
+                case 'application/dash+xml': // MPEG-DASH
+                    if (!playerInstance.dashScriptLoaded && (!(window as any).dashjs || (window as any).dashjs.isDefaultSubject))
                     {
-                        (window as any).dashjs = it.default;
+                        playerInstance.dashScriptLoaded = true;
+                        import(/* webpackChunkName: "dashjs" */ 'dashjs').then((it: any) =>
+                        {
+                            (window as any).dashjs = it.default;
+                            playerInstance.initialiseDash();
+                            resolve();
+                        });
+                    }
+                    else
+                    {
                         playerInstance.initialiseDash();
-                    });
-                }
-                else
-                {
-                    playerInstance.initialiseDash();
-                }
-                break;
-            case 'application/x-mpegurl': // HLS
-                if (!playerInstance.hlsScriptLoaded && !(window as any).Hls)
-                {
-                    playerInstance.hlsScriptLoaded = true;
-                    import(/* webpackChunkName: "hlsjs" */ 'hls.js').then((it) =>
+                        resolve();
+                    }
+                    break;
+                case 'application/x-mpegurl': // HLS
+                    if (!playerInstance.hlsScriptLoaded && !(window as any).Hls)
                     {
-                        (window as any).Hls = it.default;
+                        playerInstance.hlsScriptLoaded = true;
+                        import(/* webpackChunkName: "hlsjs" */ 'hls.js').then((it) =>
+                        {
+                            (window as any).Hls = it.default;
+                            playerInstance.initialiseHls();
+                            resolve();
+                        });
+                    }
+                    else
+                    {
                         playerInstance.initialiseHls();
-                    });
-                }
-                else
-                {
-                    playerInstance.initialiseHls();
-                }
-                break;
-        }
+                        resolve();
+                    }
+                    break;
+            }
+        })
     };
 
     playerInstance.initialiseDash = () =>

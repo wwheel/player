@@ -1,6 +1,6 @@
 export interface IStreaming
 {
-    initialiseStreamers?(): void;
+    initialiseStreamers?(): Promise<void>;
     initialiseDash?(): void;
     initialiseHls?(): void;
     detachStreamers?(): void;

@@ -9,6 +9,7 @@
         "build-cdn": "webpack --mode=production --dist=current && webpack --mode=production --dist=versioned",
         "build-dev": "webpack --mode=development",
         "build-dev-debug": "webpack --mode=development --debug",
+        "run-dev-server": "npm run build-dev && npm run dev-server",
         "dev-server": "webpack-dev-server --mode=development --host 0.0.0.0",
         "dev-server-debug": "webpack-dev-server --mode=development --debug --host 0.0.0.0",
         "dev-server-test": "webpack-dev-server --mode=production --no-live-reload --host 0.0.0.0"

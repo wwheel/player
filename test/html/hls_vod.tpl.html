@@ -16,8 +16,9 @@
 <body>
 
 <video id="fluid-player-e2e-case">
-    <source src="https://vod-qa.immerss.live/1725/channels/481/a52f1e5e17117f566bfd65e6c6c417ad/playlist.m3u8" type="application/x-mpegURL">
-<!--    <source src="https://multiplatform-f.akamaihd.net/i/multi/will/bunny/big_buck_bunny_,640x360_400,640x360_700,640x360_1000,950x540_1500,.f4v.csmil/master.m3u8" type="application/x-mpegURL"/>-->
+    <source src="https://vod-qa.immerss.live/1725/channels/481/a52f1e5e17117f566bfd65e6c6c417ad/playlist.m3u8"
+            type="application/x-mpegURL">
+    <!--    <source src="https://multiplatform-f.akamaihd.net/i/multi/will/bunny/big_buck_bunny_,640x360_400,640x360_700,640x360_1000,950x540_1500,.f4v.csmil/master.m3u8" type="application/x-mpegURL"/>-->
 </video>
 
 <%= htmlWebpackPlugin.tags.bodyTags %>
@@ -28,6 +29,8 @@
             enabled: ['Streaming']
         },
         layoutControls: {
+            autoPlay: true,
+            mute: true,
             contextMenu: {
                 controls: false,
                 links: [
@@ -37,8 +40,60 @@
                     }
                 ]
             }
+        },
+        onInit: () =>
+        {
+            // trackHls();
         }
     });
+
+    function trackHls() {
+        // Object.keys(Hls.Events).forEach(function (e) {
+        //     instance.hlsInstance().on(Hls.Events[e], console.info.bind(console));
+        // });
+        // hlsFragLoading
+        let init = false;
+        const helperPlay = () =>
+        {
+            if (!init) {
+                init = true;
+                console.log(
+                    'playing', instance.isCurrentlyPlayingVideo()
+                );
+            }
+        };
+        instance.hlsInstance().on('hlsFragLoading', event =>
+        {
+            helperPlay();
+        });
+    }
+
+    // instance.hlsInstance().on(Hls.Events[e], console.info.bind(console));
+
+    function helper() {
+        console.log('isCurrentlyPlayingVideo-', instance.isCurrentlyPlayingVideo());
+        if (!instance.isCurrentlyPlayingVideo())
+        {
+            console.log('muted-', instance.isMuted());
+            if (!instance.isMuted()) {
+                instance.muteToggle();
+            }
+
+            setTimeout(() => {
+                instance.play();
+                console.log('play');
+            }, 5000);
+        }
+    }
+
+    setTimeout(() =>
+    {
+        // if (!instance.isCurrentlyPlayingVideo() && !instance.isMuted())
+        // {
+        //     instance.muteToggle();
+        //     instance.play();
+        // }
+    }, 10);
 </script>
 
 </body>

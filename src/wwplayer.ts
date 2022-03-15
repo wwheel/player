@@ -1,4 +1,5 @@
 import Utils from './modules/utils/utils';
+import CanAutoplay from './modules/can-autoplay/can-autoplay';
 import { IDisplayOptions, ILogo, IVastOptions } from './types/display-options';
 import { ICustomControlTags } from './types/custom-control-tags';
 import { ICustomControlTagsOptions } from './types/custom-control-tags-options';
@@ -13,9 +14,11 @@ import { ISubtitles } from './modules/subtitles/type';
 import { IStreaming } from './modules/streaming/type';
 import { ICardboard } from './modules/cardboard/type';
 import { IAddSupport } from './modules/adsupport/type';
+import { ICanAutoplay } from './modules/can-autoplay/types';
 
 const WWP_MODULES = [
     Utils,
+    CanAutoplay,
 ];
 
 // Determine build mode
@@ -110,6 +113,11 @@ class Wwplayer
     promiseTimeout: any;
     adFinished: boolean;
 
+    getCanAutoplay(): Wwplayer&ICanAutoplay
+    {
+        return this;
+    }
+
     getUtils(): Wwplayer&IUtils
     {
         return this;
@@ -191,6 +199,13 @@ class Wwplayer
         for (const playerModule of WWP_MODULES)
         {
             playerModule(this, moduleOptions);
+        }
+
+        // Check autoplay
+        const autoplayResult = await this.getCanAutoplay().canAutoplay();
+        if (!autoplayResult.result)
+        {
+            options.layoutControls.mute = true;
         }
 
         let playerNode;
@@ -439,7 +454,7 @@ class Wwplayer
                     console.debug('[WWP_DEBUG] Request made', request);
                 }
             },
-            onInit: () =>
+            onInit                    : () =>
             {
             }
         };
@@ -547,7 +562,7 @@ class Wwplayer
         const notRolls = !preRolls || 0 === preRolls.length;
         if (notRolls && this.getStreaming()?.initialiseStreamers)
         {
-            this.getStreaming().initialiseStreamers();
+            await this.getStreaming().initialiseStreamers();
         }
 
         const _play_videoPlayer = playerNode.play;
@@ -586,6 +601,7 @@ class Wwplayer
                         clearTimeout(self.promiseTimeout);
                     }).catch(error =>
                     {
+                        console.log('muted', self.domRef.player.muted);
                         console.error('[WWP_ERROR] Playback error', error);
                         const isAbortError = (typeof error.name !== 'undefined' && error.name === 'AbortError');
                         // Ignore abort errors which caused for example Safari or autoplay functions
@@ -623,22 +639,34 @@ class Wwplayer
         };
 
         const videoPauseOriginal = playerNode.pause;
-        playerNode.pause = function () {
-            if (self.isPlayingMedia === true) {
+        playerNode.pause         = function ()
+        {
+            if (self.isPlayingMedia === true)
+            {
                 self.isPlayingMedia = false;
                 return videoPauseOriginal.apply(this, arguments);
             }
 
             // just in case
-            if (self.isCurrentlyPlayingVideo(self.domRef.player)) {
-                try {
+            if (self.isCurrentlyPlayingVideo(self.domRef.player))
+            {
+                try
+                {
                     self.isPlayingMedia = false;
                     return videoPauseOriginal.apply(this, arguments);
-                } catch (e) {
+                }
+                catch (e)
+                {
                     self.announceLocalError(203, 'Failed to play video.');
                 }
             }
         };
+
+        console.log({
+            autoPlay: this.displayOptions.layoutControls.autoPlay,
+            dashScriptLoaded: this.dashScriptLoaded,
+            hlsScriptLoaded: this.hlsScriptLoaded
+        });
 
         if (!!this.displayOptions.layoutControls.autoPlay && !this.dashScriptLoaded && !this.hlsScriptLoaded)
         {
@@ -2623,7 +2651,8 @@ class Wwplayer
             this.domRef.player.currentTime = newCurrentTime;
             this.domRef.player.removeEventListener('loadedmetadata', loadedMetadata);
             // Safari ios and mac fix to set currentTime
-            if (this.mobileInfo.userOs === 'iOS' || this.getUtils().getBrowserVersion().browserName.toLowerCase() === 'safari')
+            if (this.mobileInfo.userOs === 'iOS' || this.getUtils().getBrowserVersion().browserName
+                .toLowerCase() === 'safari')
             {
                 this.domRef.player.addEventListener('playing', videoPlayStart.bind(this));
             }
@@ -3619,6 +3648,18 @@ class Wwplayer
                 {
                     functionCall(this.getCurrentTime())
                 });
+                break;
+            case 'waiting':
+                this.domRef.player.addEventListener('waiting', functionCall);
+                break;
+            case 'loadedmetadata':
+                this.domRef.player.addEventListener('loadedmetadata', functionCall);
+                break;
+            case 'error':
+                this.domRef.player.addEventListener('error', functionCall);
+                break;
+            case 'durationchange':
+                this.domRef.player.addEventListener('durationchange', functionCall);
                 break;
             default:
                 console.log('[WWP_ERROR] Event not recognised');
