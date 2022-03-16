@@ -443,24 +443,24 @@ class Wwplayer
             },
             debug                     : WWP_RUNTIME_DEBUG,
             modules                   : {
-                configureHls         : (options) =>
+                configureHls    : (options) =>
                 {
                     return options;
                 },
-                onBeforeInitHls      : (hls) =>
+                onBeforeInitHls : (hls) =>
                 {
                 },
-                onAfterInitHls       : (hls) =>
+                onAfterInitHls  : (hls) =>
                 {
                 },
-                configureDash        : (options) =>
+                configureDash   : (options) =>
                 {
                     return options;
                 },
-                onBeforeInitDash     : (dash) =>
+                onBeforeInitDash: (dash) =>
                 {
                 },
-                onAfterInitDash      : (dash) =>
+                onAfterInitDash : (dash) =>
                 {
                 },
                 onAfterAllModulesInit: () =>
@@ -507,52 +507,17 @@ class Wwplayer
 
         if (this.getVAST()?.recalculateAdDimensions)
         {
-            createListener({
-                elements : playerNode,
-                events   : 'webkitfullscreenchange fullscreenchange',
-                listeners: this.listeners,
-                callback : () => this.getVAST().recalculateAdDimensions()
-            });
+            playerNode.addEventListener('webkitfullscreenchange', this.getVAST().recalculateAdDimensions.bind(this));
+            playerNode.addEventListener('fullscreenchange', this.getVAST().recalculateAdDimensions.bind(this));
         }
-
-        createListener({
-            elements : playerNode,
-            events   : 'waiting',
-            listeners: this.listeners,
-            callback : () => this.onRecentWaiting()
-        });
-        createListener({
-            elements : playerNode,
-            events   : 'pause',
-            listeners: this.listeners,
-            callback : () => this.onWWPlayerPause()
-        });
-        createListener({
-            elements : playerNode,
-            events   : 'loadedmetadata',
-            listeners: this.mainVideoReadyListeners,
-            callback : () => this.mainVideoReady()
-        });
-        createListener({
-            elements : playerNode,
-            events   : 'error',
-            listeners: this.listeners,
-            callback : () => this.onErrorDetection()
-        });
-        createListener({
-            elements : playerNode,
-            events   : 'ended',
-            listeners: this.listeners,
-            callback : () => this.onMainVideoEnded()
-        });
-        createListener({
-            elements : playerNode,
-            events   : 'durationchange',
-            listeners: this.listeners,
-            callback : () =>
-            {
-                this.currentVideoDuration = this.getCurrentVideoDuration();
-            }
+        playerNode.addEventListener('waiting', this.onRecentWaiting.bind(this));
+        playerNode.addEventListener('pause', this.onWWPlayerPause.bind(this));
+        playerNode.addEventListener('loadedmetadata', this.mainVideoReady.bind(this));
+        playerNode.addEventListener('error', this.onErrorDetection.bind(this));
+        playerNode.addEventListener('ended', this.onMainVideoEnded.bind(this));
+        playerNode.addEventListener('durationchange', () =>
+        {
+            this.currentVideoDuration = this.getCurrentVideoDuration();
         });
 
         if (this.displayOptions.layoutControls.showCardBoardView)
@@ -745,7 +710,7 @@ class Wwplayer
                 listeners: this.listeners,
                 callback : (evt) =>
                 {
-                    this.handleMouseleave(evt);
+                    this.showControlBar();
                     this.showTitle();
                 }
             });
@@ -4083,14 +4048,14 @@ class Wwplayer
 
     destroy(): void
     {
-        destroyListener(this.volumeListeners);
-        destroyListener(this.progressbarListeners);
-        destroyListener(this.listeners);
-        destroyListener(this.initialPlayListeners);
-        destroyListener(this.videoSourceSwitchListeners);
-        destroyListener(this.currentTimeAndPlayListeners);
-        destroyListener(this.mainVideoReadyListeners);
-        destroyListener(this.captureKeyListeners);
+        // destroyListener(this.volumeListeners);
+        // destroyListener(this.progressbarListeners);
+        // destroyListener(this.listeners);
+        // destroyListener(this.initialPlayListeners);
+        // destroyListener(this.videoSourceSwitchListeners);
+        // destroyListener(this.currentTimeAndPlayListeners);
+        // destroyListener(this.mainVideoReadyListeners);
+        // destroyListener(this.captureKeyListeners);
         const container = document.getElementById('ww_video_wrapper_' + this.videoPlayerId);
 
         if (!container)
