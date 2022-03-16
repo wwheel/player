@@ -15,6 +15,7 @@ import { IStreaming } from './modules/streaming/type';
 import { ICardboard } from './modules/cardboard/type';
 import { IAddSupport } from './modules/adsupport/type';
 import { ICanAutoplay } from './modules/can-autoplay/types';
+import { createListener, destroyListener, IListener } from './utils/event-listener';
 
 const WWP_MODULES = [
     Utils,
@@ -35,7 +36,6 @@ class Wwplayer
 {
     version: string;
     homepage: string;
-    destructors: any;
     domRef: {
         player: HTMLVideoElement;
         wrapper?: HTMLElement;
@@ -114,6 +114,14 @@ class Wwplayer
     adFinished: boolean;
     currentProgramDateTime: Date;
     currentProgramDateTimeInterval: any;
+    private readonly volumeListeners: IListener[];
+    private readonly progressbarListeners: IListener[];
+    private readonly listeners: IListener[];
+    private readonly initialPlayListeners: IListener[];
+    private readonly videoSourceSwitchListeners: IListener[];
+    private readonly currentTimeAndPlayListeners: IListener[];
+    private readonly mainVideoReadyListeners: IListener[];
+    private readonly captureKeyListeners: IListener[];
 
     getCanAutoplay(): Wwplayer&ICanAutoplay
     {
@@ -170,14 +178,24 @@ class Wwplayer
         };
 
         // noinspection JSUnresolvedVariable
-        this.version     = typeof WWP_BUILD_VERSION !== 'undefined' ? WWP_BUILD_VERSION : '';
+        this.version                     = typeof WWP_BUILD_VERSION !== 'undefined' ? WWP_BUILD_VERSION : '';
         // noinspection JSUnresolvedVariable
-        this.homepage    = typeof WWP_HOMEPAGE !== 'undefined'
+        this.homepage                    = typeof WWP_HOMEPAGE !== 'undefined'
             ? WWP_HOMEPAGE + '/?utm_source=player&utm_medium=context_menu&utm_campaign=organic'
             : '';
-        this.destructors = [];
+        this.volumeListeners             = [];
+        this.progressbarListeners        = [];
+        this.listeners                   = [];
+        this.initialPlayListeners        = [];
+        this.videoSourceSwitchListeners  = [];
+        this.currentTimeAndPlayListeners = [];
+        this.mainVideoReadyListeners     = [];
+        this.captureKeyListeners         = [];
     }
 
+    /**
+     * Init player
+     */
     async init(playerTarget: HTMLVideoElement|string|String, options: IDisplayOptions): Promise<void>
     {
         // Install player modules and features
@@ -425,24 +443,24 @@ class Wwplayer
             },
             debug                     : WWP_RUNTIME_DEBUG,
             modules                   : {
-                configureHls    : (options) =>
+                configureHls         : (options) =>
                 {
                     return options;
                 },
-                onBeforeInitHls : (hls) =>
+                onBeforeInitHls      : (hls) =>
                 {
                 },
-                onAfterInitHls  : (hls) =>
+                onAfterInitHls       : (hls) =>
                 {
                 },
-                configureDash   : (options) =>
+                configureDash        : (options) =>
                 {
                     return options;
                 },
-                onBeforeInitDash: (dash) =>
+                onBeforeInitDash     : (dash) =>
                 {
                 },
-                onAfterInitDash : (dash) =>
+                onAfterInitDash      : (dash) =>
                 {
                 },
                 onAfterAllModulesInit: () =>
@@ -489,17 +507,52 @@ class Wwplayer
 
         if (this.getVAST()?.recalculateAdDimensions)
         {
-            playerNode.addEventListener('webkitfullscreenchange', this.getVAST().recalculateAdDimensions.bind(this));
-            playerNode.addEventListener('fullscreenchange', this.getVAST().recalculateAdDimensions.bind(this));
+            createListener({
+                elements : playerNode,
+                events   : 'webkitfullscreenchange fullscreenchange',
+                listeners: this.listeners,
+                callback : () => this.getVAST().recalculateAdDimensions()
+            });
         }
-        playerNode.addEventListener('waiting', this.onRecentWaiting.bind(this));
-        playerNode.addEventListener('pause', this.onWWPlayerPause.bind(this));
-        playerNode.addEventListener('loadedmetadata', this.mainVideoReady.bind(this));
-        playerNode.addEventListener('error', this.onErrorDetection.bind(this));
-        playerNode.addEventListener('ended', this.onMainVideoEnded.bind(this));
-        playerNode.addEventListener('durationchange', () =>
-        {
-            this.currentVideoDuration = this.getCurrentVideoDuration();
+
+        createListener({
+            elements : playerNode,
+            events   : 'waiting',
+            listeners: this.listeners,
+            callback : () => this.onRecentWaiting()
+        });
+        createListener({
+            elements : playerNode,
+            events   : 'pause',
+            listeners: this.listeners,
+            callback : () => this.onWWPlayerPause()
+        });
+        createListener({
+            elements : playerNode,
+            events   : 'loadedmetadata',
+            listeners: this.mainVideoReadyListeners,
+            callback : () => this.mainVideoReady()
+        });
+        createListener({
+            elements : playerNode,
+            events   : 'error',
+            listeners: this.listeners,
+            callback : () => this.onErrorDetection()
+        });
+        createListener({
+            elements : playerNode,
+            events   : 'ended',
+            listeners: this.listeners,
+            callback : () => this.onMainVideoEnded()
+        });
+        createListener({
+            elements : playerNode,
+            events   : 'durationchange',
+            listeners: this.listeners,
+            callback : () =>
+            {
+                this.currentVideoDuration = this.getCurrentVideoDuration();
+            }
         });
 
         if (this.displayOptions.layoutControls.showCardBoardView)
@@ -680,16 +733,34 @@ class Wwplayer
 
         if (!this.mobileInfo.userOs)
         {
-            videoWrapper.addEventListener('mouseleave', this.handleMouseleave.bind(this), false);
-            videoWrapper.addEventListener('mouseenter', this.showControlBar.bind(this), false);
-            videoWrapper.addEventListener('mouseenter', this.showTitle.bind(this), false);
+            createListener({
+                elements : videoWrapper,
+                events   : 'mouseleave',
+                listeners: this.listeners,
+                callback : (evt) => this.handleMouseleave(evt)
+            });
+            createListener({
+                elements : videoWrapper,
+                events   : 'mouseenter',
+                listeners: this.listeners,
+                callback : (evt) =>
+                {
+                    this.handleMouseleave(evt);
+                    this.showTitle();
+                }
+            });
         }
         else
         {
             //On mobile mouseleave behavior does not make sense, so it's better to keep controls, once the playback starts
             //Autohide behavior on timer is a separate functionality
             this.hideControlBar();
-            videoWrapper.addEventListener('touchstart', this.showControlBar.bind(this), false);
+            createListener({
+                elements : videoWrapper,
+                events   : 'touchstart',
+                listeners: this.listeners,
+                callback : () => this.showControlBar()
+            });
         }
 
         //Keyboard Controls
@@ -773,7 +844,7 @@ class Wwplayer
         }
     }
 
-    onMainVideoEnded(event): void
+    onMainVideoEnded(): void
     {
         this.debugMessage('onMainVideoEnded is called');
 
@@ -1607,10 +1678,7 @@ class Wwplayer
 
         const onProgressbarMouseUp = event =>
         {
-            document.removeEventListener('mousemove', onProgressbarMouseMove);
-            document.removeEventListener('touchmove', onProgressbarMouseMove);
-            document.removeEventListener('mouseup', onProgressbarMouseUp);
-            document.removeEventListener('touchend', onProgressbarMouseUp);
+            destroyListener(this.progressbarListeners);
 
             let clickedX = this.getEventOffsetX(event, event.target.parentNode);
 
@@ -1640,10 +1708,18 @@ class Wwplayer
             this.wwPseudoPause = false;
         };
 
-        document.addEventListener('mouseup', onProgressbarMouseUp.bind(this));
-        document.addEventListener('touchend', onProgressbarMouseUp.bind(this));
-        document.addEventListener('mousemove', onProgressbarMouseMove.bind(this));
-        document.addEventListener('touchmove', onProgressbarMouseMove.bind(this));
+        createListener({
+            elements : document,
+            events   : 'mouseup touchend',
+            listeners: this.progressbarListeners,
+            callback : (evt) => onProgressbarMouseUp(evt)
+        });
+        createListener({
+            elements : document,
+            events   : 'mousemove touchmove',
+            listeners: this.progressbarListeners,
+            callback : (evt) => onProgressbarMouseMove(evt)
+        });
     }
 
     onVolumeBarMouseDown(): void
@@ -1683,10 +1759,7 @@ class Wwplayer
 
         const onVolumeBarMouseUp = event =>
         {
-            document.removeEventListener('mousemove', onVolumeBarMouseMove);
-            document.removeEventListener('touchmove', onVolumeBarMouseMove);
-            document.removeEventListener('mouseup', onVolumeBarMouseUp);
-            document.removeEventListener('touchend', onVolumeBarMouseUp);
+            destroyListener(this.volumeListeners);
 
             const currentX = this.getEventOffsetX(event, this.domRef.controls.volumeContainer);
 
@@ -1696,10 +1769,18 @@ class Wwplayer
             }
         };
 
-        document.addEventListener('mouseup', onVolumeBarMouseUp.bind(this));
-        document.addEventListener('touchend', onVolumeBarMouseUp.bind(this));
-        document.addEventListener('mousemove', onVolumeBarMouseMove.bind(this));
-        document.addEventListener('touchmove', onVolumeBarMouseMove.bind(this));
+        createListener({
+            elements : document,
+            events   : 'mouseup touchend',
+            listeners: this.volumeListeners,
+            callback : (evt) => onVolumeBarMouseUp(evt)
+        });
+        createListener({
+            elements : document,
+            events   : 'mousemove touchmove',
+            listeners: this.volumeListeners,
+            callback : (evt) => onVolumeBarMouseMove(evt)
+        });
     }
 
     findRoll(roll): string[]
@@ -1878,22 +1959,28 @@ class Wwplayer
             return false;
         };
 
-        document.addEventListener('keydown', this.captureKey, true);
+        createListener({
+            elements : document,
+            events   : 'keydown',
+            listeners: this.captureKeyListeners,
+            callback : (event) => this.captureKey(event)
+        });
     }
 
     keyboardControl(): void
     {
-        this.domRef.wrapper.addEventListener('click', this.handleMouseenterForKeyboard.bind(this), false);
-
-        // When we click outside player, we stop registering keyboard events
-        const clickHandler = this.handleWindowClick.bind(this);
-
-        this.destructors.push(() =>
-        {
-            window.removeEventListener('click', clickHandler);
+        createListener({
+            elements : this.domRef.wrapper,
+            events   : 'click',
+            listeners: this.listeners,
+            callback : () => this.handleMouseenterForKeyboard()
         });
-
-        window.addEventListener('click', clickHandler);
+        createListener({
+            elements : window,
+            events   : 'click',
+            listeners: this.listeners,
+            callback : (evt) => this.handleWindowClick(evt)
+        });
     }
 
     handleWindowClick(e): void
@@ -1912,7 +1999,7 @@ class Wwplayer
             return;
         }
 
-        document.removeEventListener('keydown', this.captureKey, true);
+        destroyListener(this.captureKeyListeners);
         delete this['captureKey'];
 
         if (this.theatreMode && !this.theatreModeAdvanced)
@@ -1923,21 +2010,30 @@ class Wwplayer
 
     initialPlay(): void
     {
-        this.domRef.player.addEventListener('playing', () =>
-        {
-            this.toggleLoader(false);
+        createListener({
+            elements : this.domRef.player,
+            events   : 'playing',
+            listeners: this.listeners,
+            callback : () => this.toggleLoader(false)
         });
 
-        this.domRef.player.addEventListener('timeupdate', () =>
-        {
-            // some places we are manually displaying toggleLoader
-            // user experience toggleLoader being displayed even when content is playing in background
-            this.toggleLoader(false);
+        createListener({
+            elements : this.domRef.player,
+            events   : 'timeupdate',
+            listeners: this.listeners,
+            callback : () =>
+            {
+                // some places we are manually displaying toggleLoader
+                // user experience toggleLoader being displayed even when content is playing in background
+                this.toggleLoader(false);
+            }
         });
 
-        this.domRef.player.addEventListener('waiting', () =>
-        {
-            this.toggleLoader(true);
+        createListener({
+            elements : this.domRef.player,
+            events   : 'waiting',
+            listeners: this.listeners,
+            callback : () => this.toggleLoader(true)
         });
 
         if (!this.displayOptions.layoutControls.playButtonShowing)
@@ -1956,7 +2052,7 @@ class Wwplayer
         if (!this.firstPlayLaunched)
         {
             this.playPauseToggle();
-            this.domRef.player.removeEventListener('play', this.initialPlay);
+            destroyListener(this.initialPlayListeners);
         }
     }
 
@@ -2078,7 +2174,12 @@ class Wwplayer
             }
             else
             {
-                this.domRef.player.addEventListener('mainVideoDurationSet', prepareVastAdsThatKnowDuration.bind(this));
+                createListener({
+                    elements : this.domRef.player,
+                    events   : 'mainVideoDurationSet',
+                    listeners: this.listeners,
+                    callback : () => prepareVastAdsThatKnowDuration()
+                });
             }
         }
 
@@ -2109,28 +2210,42 @@ class Wwplayer
         {
             if (!this.firstPlayLaunched)
             {
-                this.domRef.player.removeEventListener('play', this.initialPlay);
+                destroyListener(this.initialPlayListeners);
             }
 
             this.playPauseToggle();
         });
 
-        this.domRef.player.addEventListener('play', () =>
-        {
-            this.controlPlayPauseToggle();
-            this.contolVolumebarUpdate();
-        }, false);
+        createListener({
+            elements : this.domRef.player,
+            events   : 'play',
+            listeners: this.listeners,
+            callback : () =>
+            {
+                this.controlPlayPauseToggle();
+                this.contolVolumebarUpdate();
+            }
+        });
 
-        this.domRef.player.addEventListener('wwplayerpause', () =>
-        {
-            this.controlPlayPauseToggle();
-        }, false);
+        createListener({
+            elements : this.domRef.player,
+            events   : 'wwplayerpause',
+            listeners: this.listeners,
+            callback : () =>
+            {
+                this.controlPlayPauseToggle();
+            }
+        });
 
-        //Set the progressbar
-        this.domRef.player.addEventListener('timeupdate', () =>
-        {
-            this.contolProgressbarUpdate();
-            this.controlDurationUpdate();
+        createListener({
+            elements : this.domRef.player,
+            events   : 'timeupdate',
+            listeners: this.listeners,
+            callback : () =>
+            {
+                this.contolProgressbarUpdate();
+                this.controlDurationUpdate();
+            }
         });
 
         const isMobileChecks = this.getUtils().getMobileOs();
@@ -2147,15 +2262,27 @@ class Wwplayer
         }
         else
         {
-            document.getElementById(this.videoPlayerId + '_ww_controls_progress_container')
-                .addEventListener(eventOn, event => this.onProgressbarMouseDown(event), false);
+            createListener({
+                elements : document.getElementById(this.videoPlayerId + '_ww_controls_progress_container'),
+                events   : eventOn,
+                listeners: this.listeners,
+                callback : (evt) => this.onProgressbarMouseDown(evt)
+            });
         }
 
         //Set the volume controls
-        document.getElementById(this.videoPlayerId + '_ww_control_volume_container')
-            .addEventListener(eventOn, event => this.onVolumeBarMouseDown(), false);
-
-        this.domRef.player.addEventListener('volumechange', () => this.contolVolumebarUpdate());
+        createListener({
+            elements : document.getElementById(this.videoPlayerId + '_ww_control_volume_container'),
+            events   : eventOn,
+            listeners: this.listeners,
+            callback : () => this.onVolumeBarMouseDown()
+        });
+        createListener({
+            elements : this.domRef.player,
+            events   : 'volumechange',
+            listeners: this.listeners,
+            callback : () => this.contolVolumebarUpdate()
+        });
 
         this.trackEvent(this.domRef.player.parentNode, 'click', '.ww_control_mute', () => this.muteToggle());
 
@@ -2175,11 +2302,16 @@ class Wwplayer
             document.getElementById(this.videoPlayerId + '_ww_control_theatre').style.display = 'none';
         }
 
-        this.domRef.player.addEventListener('ratechange', () =>
-        {
-            if (this.isCurrentlyPlayingAd)
+        createListener({
+            elements : this.domRef.player,
+            events   : 'ratechange',
+            listeners: this.listeners,
+            callback : () =>
             {
-                this.playbackRate = 1;
+                if (this.isCurrentlyPlayingAd)
+                {
+                    this.playbackRate = 1;
+                }
             }
         });
     }
@@ -2205,8 +2337,11 @@ class Wwplayer
         progressContainer.appendChild(previewContainer);
 
         // Set up hover for time position preview display
-        document.getElementById(this.videoPlayerId + '_ww_controls_progress_container')
-            .addEventListener('mousemove', event =>
+        createListener({
+            elements : document.getElementById(this.videoPlayerId + '_ww_controls_progress_container'),
+            events   : 'mousemove',
+            listeners: this.listeners,
+            callback : event =>
             {
                 const progressContainer = document.getElementById(this.videoPlayerId + '_ww_controls_progress_container');
                 const totalWidth        = progressContainer.clientWidth;
@@ -2218,15 +2353,20 @@ class Wwplayer
 
                 hoverTimeItem.style.display = 'block';
                 hoverTimeItem.style.left    = (hoverSecondQ / this.domRef.player.duration * 100) + '%';
-            }, false);
+            }
+        });
 
         // Hide timeline preview on mouseout
-        document.getElementById(this.videoPlayerId + '_ww_controls_progress_container')
-            .addEventListener('mouseout', () =>
+        createListener({
+            elements : document.getElementById(this.videoPlayerId + '_ww_controls_progress_container'),
+            events   : 'mouseout',
+            listeners: this.listeners,
+            callback : () =>
             {
                 const hoverTimeItem         = document.getElementById(this.videoPlayerId + '_ww_timeline_preview');
                 hoverTimeItem.style.display = 'none';
-            }, false);
+            }
+        });
     }
 
     setCustomContextMenu(): void
@@ -2254,7 +2394,12 @@ class Wwplayer
                 const linkItem     = document.createElement('li');
                 linkItem.id        = this.videoPlayerId + 'context_option_custom_' + count;
                 linkItem.innerHTML = link.label;
-                linkItem.addEventListener('click', () => window.open(link.href, '_blank'), false);
+                createListener({
+                    elements : linkItem,
+                    events   : 'click',
+                    listeners: this.listeners,
+                    callback : () => window.open(link.href, '_blank')
+                });
                 contextMenuList.appendChild(linkItem);
             }
         }
@@ -2264,19 +2409,34 @@ class Wwplayer
             const menuItemPlay     = document.createElement('li');
             menuItemPlay.id        = this.videoPlayerId + 'context_option_play';
             menuItemPlay.innerHTML = this.displayOptions.captions.play;
-            menuItemPlay.addEventListener('click', () => this.playPauseToggle(), false);
+            createListener({
+                elements : menuItemPlay,
+                events   : 'click',
+                listeners: this.listeners,
+                callback : () => this.playPauseToggle()
+            });
             contextMenuList.appendChild(menuItemPlay);
 
             const menuItemMute     = document.createElement('li');
             menuItemMute.id        = this.videoPlayerId + 'context_option_mute';
             menuItemMute.innerHTML = this.displayOptions.captions.mute;
-            menuItemMute.addEventListener('click', () => this.muteToggle(), false);
+            createListener({
+                elements : menuItemMute,
+                events   : 'click',
+                listeners: this.listeners,
+                callback : () => this.muteToggle()
+            });
             contextMenuList.appendChild(menuItemMute);
 
             const menuItemFullscreen     = document.createElement('li');
             menuItemFullscreen.id        = this.videoPlayerId + 'context_option_fullscreen';
             menuItemFullscreen.innerHTML = this.displayOptions.captions.fullscreen;
-            menuItemFullscreen.addEventListener('click', () => this.fullscreenToggle(), false);
+            createListener({
+                elements : menuItemFullscreen,
+                events   : 'click',
+                listeners: this.listeners,
+                callback : () => this.fullscreenToggle()
+            });
             contextMenuList.appendChild(menuItemFullscreen);
         }
 
@@ -2289,23 +2449,33 @@ class Wwplayer
         this.domRef.player.parentNode.insertBefore(divContextMenu, this.domRef.player.nextSibling);
 
         //Disable the default context menu
-        playerWrapper.addEventListener('contextmenu', e =>
-        {
-            e.preventDefault();
+        createListener({
+            elements : playerWrapper,
+            events   : 'contextmenu',
+            listeners: this.listeners,
+            callback : e =>
+            {
+                e.preventDefault();
 
-            divContextMenu.style.left    = this.getEventOffsetX(e, this.domRef.player) + 'px';
-            divContextMenu.style.top     = this.getEventOffsetY(e, this.domRef.player) + 'px';
-            divContextMenu.style.display = 'block';
-        }, false);
+                divContextMenu.style.left    = this.getEventOffsetX(e, this.domRef.player) + 'px';
+                divContextMenu.style.top     = this.getEventOffsetY(e, this.domRef.player) + 'px';
+                divContextMenu.style.display = 'block';
+            }
+        });
 
         //Hide the context menu on clicking elsewhere
-        document.addEventListener('click', e =>
-        {
-            if ((e.target !== this.domRef.player) || e.button !== 2)
+        createListener({
+            elements : document,
+            events   : 'click',
+            listeners: this.listeners,
+            callback : e =>
             {
-                divContextMenu.style.display = 'none';
+                if ((e.target !== this.domRef.player) || e.button !== 2)
+                {
+                    divContextMenu.style.display = 'none';
+                }
             }
-        }, false);
+        });
     }
 
     setDefaultLayout(): void
@@ -2357,7 +2527,12 @@ class Wwplayer
 
         if (this.displayOptions.layoutControls.doubleclickFullscreen)
         {
-            this.domRef.player.addEventListener('dblclick', this.fullscreenToggle.bind(this));
+            createListener({
+                elements : this.domRef.player,
+                events   : 'dblclick',
+                listeners: this.listeners,
+                callback : () => this.fullscreenToggle()
+            });
         }
 
         this.initHtmlOnPauseBlock();
@@ -2404,8 +2579,18 @@ class Wwplayer
             this.domRef.player.currentTime = skipTo;
         };
 
-        this.domRef.controls.skipBack.addEventListener('click', skipFunction.bind(this, -10));
-        this.domRef.controls.skipForward.addEventListener('click', skipFunction.bind(this, 10));
+        createListener({
+            elements : this.domRef.controls.skipBack,
+            events   : 'click',
+            listeners: this.listeners,
+            callback : () => skipFunction(-10)
+        });
+        createListener({
+            elements : this.domRef.controls.skipForward,
+            events   : 'click',
+            listeners: this.listeners,
+            callback : () => skipFunction(10)
+        });
     }
 
     /**
@@ -2424,10 +2609,20 @@ class Wwplayer
     setLayout(): void
     {
         //All other browsers
-        const listenTo = (this.getUtils().isTouchDevice()) ? 'touchend' : 'click';
-        this.domRef.player.addEventListener(listenTo, () => this.playPauseToggle(), false);
+        const listenTo = this.getUtils().isTouchDevice() ? 'touchend' : 'click';
+        createListener({
+            elements : this.domRef.player,
+            events   : listenTo,
+            listeners: this.listeners,
+            callback : () => this.playPauseToggle()
+        });
         //Mobile Safari - because it does not emit a click event on initial click of the video
-        this.domRef.player.addEventListener('play', this.initialPlay.bind(this), false);
+        createListener({
+            elements : this.domRef.player,
+            events   : 'play',
+            listeners: this.initialPlayListeners,
+            callback : () => this.initialPlay()
+        });
         this.setDefaultLayout();
     }
 
@@ -2444,10 +2639,12 @@ class Wwplayer
             {
                 if (this.getVAST()?.recalculateAdDimensions)
                 {
-                    document.addEventListener(eventType, ev =>
-                    {
-                        this.getVAST().recalculateAdDimensions();
-                    }, false);
+                    createListener({
+                        elements : document,
+                        events   : eventType,
+                        listeners: this.listeners,
+                        callback : () => this.getVAST().recalculateAdDimensions()
+                    });
                 }
             }
         });
@@ -2583,9 +2780,11 @@ class Wwplayer
         if (appendSourceChange)
         {
             sourceChangeButton.appendChild(sourceChangeList);
-            sourceChangeButton.addEventListener('click', () =>
-            {
-                this.openCloseVideoSourceSwitch();
+            createListener({
+                elements : sourceChangeButton,
+                events   : 'click',
+                listeners: this.listeners,
+                callback : () => this.openCloseVideoSourceSwitch()
             });
         }
         else
@@ -2612,12 +2811,17 @@ class Wwplayer
         }
 
         sourceChangeList.style.display = 'block';
-        const mouseOut                 = () =>
-        {
-            sourceChangeList.removeEventListener('mouseleave', mouseOut);
-            sourceChangeList.style.display = 'none';
-        };
-        sourceChangeList.addEventListener('mouseleave', mouseOut);
+
+        createListener({
+            elements : sourceChangeList,
+            events   : 'mouseleave',
+            listeners: this.videoSourceSwitchListeners,
+            once     : true,
+            callback : () =>
+            {
+                sourceChangeList.style.display = 'none';
+            }
+        });
     }
 
     setVideoSource(url: string): boolean
@@ -2659,12 +2863,18 @@ class Wwplayer
         const loadedMetadata = () =>
         {
             this.domRef.player.currentTime = newCurrentTime;
-            this.domRef.player.removeEventListener('loadedmetadata', loadedMetadata);
             // Safari ios and mac fix to set currentTime
-            if (this.mobileInfo.userOs === 'iOS' || this.getUtils().getBrowserVersion().browserName
-                .toLowerCase() === 'safari')
+            if (
+                this.mobileInfo.userOs === 'iOS' ||
+                this.getUtils().getBrowserVersion().browserName.toLowerCase() === 'safari'
+            )
             {
-                this.domRef.player.addEventListener('playing', videoPlayStart.bind(this));
+                createListener({
+                    elements : this.domRef.player,
+                    events   : 'playing',
+                    listeners: this.currentTimeAndPlayListeners,
+                    callback : () => videoPlayStart()
+                });
             }
 
             if (shouldPlay)
@@ -2685,10 +2895,16 @@ class Wwplayer
         let videoPlayStart = () =>
         {
             this.currentTime = newCurrentTime;
-            this.domRef.player.removeEventListener('playing', videoPlayStart);
+            destroyListener(this.currentTimeAndPlayListeners);
         };
 
-        this.domRef.player.addEventListener('loadedmetadata', loadedMetadata.bind(this), false);
+        createListener({
+            elements : this.domRef.player,
+            events   : 'loadedmetadata',
+            listeners: this.listeners,
+            once     : true,
+            callback : () => loadedMetadata()
+        });
         this.domRef.player.load();
     }
 
@@ -2791,24 +3007,39 @@ class Wwplayer
         if (this.displayOptions.layoutControls.logo.clickUrl !== null)
         {
             logoImage.style.cursor = 'pointer';
-            logoImage.addEventListener('click', () =>
-            {
-                const win = window.open(this.displayOptions.layoutControls.logo.clickUrl, '_blank');
-                win.focus();
+            createListener({
+                elements : logoImage,
+                events   : 'click',
+                listeners: this.listeners,
+                callback : () =>
+                {
+                    const win = window.open(this.displayOptions.layoutControls.logo.clickUrl, '_blank');
+                    win.focus();
+                }
             });
         }
 
         // If a mouseOverImage is provided then we must set up the listeners for it
         if (this.displayOptions.layoutControls.logo.mouseOverImageUrl)
         {
-            logoImage.addEventListener('mouseover', () =>
-            {
-                logoImage.src = this.displayOptions.layoutControls.logo.mouseOverImageUrl;
-            }, false);
-            logoImage.addEventListener('mouseout', () =>
-            {
-                logoImage.src = this.displayOptions.layoutControls.logo.imageUrl;
-            }, false);
+            createListener({
+                elements : logoImage,
+                events   : 'mouseover',
+                listeners: this.listeners,
+                callback : () =>
+                {
+                    logoImage.src = this.displayOptions.layoutControls.logo.mouseOverImageUrl;
+                }
+            });
+            createListener({
+                elements : logoImage,
+                events   : 'mouseout',
+                listeners: this.listeners,
+                callback : () =>
+                {
+                    logoImage.src = this.displayOptions.layoutControls.logo.imageUrl;
+                }
+            });
         }
 
         this.domRef.player.parentNode.insertBefore(logoHolder, null);
@@ -2862,12 +3093,14 @@ class Wwplayer
         containerDiv.className = 'ww_html_on_pause';
         const backgroundColor  = (this.displayOptions.layoutControls.primaryColor) ? this.displayOptions.layoutControls.primaryColor : '#333333';
         containerDiv.innerHTML = '<div id="' + this.videoPlayerId + '_ww_initial_play" class="ww_initial_play" style="background-color:' + backgroundColor + '"><div id="' + this.videoPlayerId + '_ww_state_button" class="ww_initial_play_button"></div></div>';
-        const initPlayFunction = () =>
-        {
-            this.playPauseToggle();
-            containerDiv.removeEventListener('click', initPlayFunction);
-        };
-        containerDiv.addEventListener('click', initPlayFunction.bind(this));
+
+        createListener({
+            elements : containerDiv,
+            events   : 'click',
+            listeners: this.listeners,
+            once     : true,
+            callback : () => this.playPauseToggle()
+        });
 
         // If the user has chosen to not show the play button we'll make it invisible
         // We don't hide altogether because animations might still be used
@@ -2895,7 +3128,7 @@ class Wwplayer
         this.mainVideoDuration   = this.domRef.player.duration;
         this.mainVideoReadyState = true;
         this.domRef.player.dispatchEvent(event);
-        this.domRef.player.removeEventListener('loadedmetadata', this.mainVideoReady);
+        destroyListener(this.mainVideoReadyListeners);
     }
 
     userActivityChecker(): void
@@ -2960,7 +3193,12 @@ class Wwplayer
 
         for (let i = 0; i < listenTo.length; i++)
         {
-            videoPlayer.addEventListener(listenTo[i], activity);
+            createListener({
+                elements : videoPlayer,
+                events   : listenTo[i],
+                listeners: this.listeners,
+                callback : (evt) => activity(evt)
+            });
         }
     }
 
@@ -3097,11 +3335,27 @@ class Wwplayer
 
     linkControlBarUserActivity(): void
     {
-        this.domRef.player.addEventListener('userInactive', this.hideControlBar.bind(this));
-        this.domRef.player.addEventListener('userInactive', this.hideTitle.bind(this));
+        createListener({
+            elements : this.domRef.player,
+            events   : 'userInactive',
+            listeners: this.listeners,
+            callback : () =>
+            {
+                this.hideControlBar();
+                this.hideTitle();
+            }
+        });
 
-        this.domRef.player.addEventListener('userActive', this.showControlBar.bind(this));
-        this.domRef.player.addEventListener('userActive', this.showTitle.bind(this));
+        createListener({
+            elements : this.domRef.player,
+            events   : 'userActive',
+            listeners: this.listeners,
+            callback : () =>
+            {
+                this.showControlBar();
+                this.showTitle();
+            }
+        });
     }
 
     initMute(): void
@@ -3112,6 +3366,7 @@ class Wwplayer
         }
 
         this.domRef.player.volume = 0;
+        this.domRef.player.muted  = true;
     }
 
     initLoop(): void
@@ -3189,21 +3444,27 @@ class Wwplayer
             sourceChangeDiv.className = 'ww_video_playback_rates_item';
             sourceChangeDiv.innerText = rate;
 
-            sourceChangeDiv.addEventListener('click', function (event)
-            {
-                event.stopPropagation();
-                let playbackRate = this.innerText.replace('x', '');
-                self.setPlaybackSpeed(playbackRate);
-                self.openCloseVideoPlaybackRate();
-
+            createListener({
+                elements : sourceChangeDiv,
+                events   : 'click',
+                listeners: self.listeners,
+                callback : (event) =>
+                {
+                    event.stopPropagation();
+                    let playbackRate = sourceChangeDiv.innerText.replace('x', '');
+                    self.setPlaybackSpeed(playbackRate);
+                    self.openCloseVideoPlaybackRate();
+                }
             });
             sourceChangeList.appendChild(sourceChangeDiv);
         });
 
         sourceChangeButton.appendChild(sourceChangeList);
-        sourceChangeButton.addEventListener('click', function ()
-        {
-            self.openCloseVideoPlaybackRate();
+        createListener({
+            elements : sourceChangeButton,
+            events   : 'click',
+            listeners: self.listeners,
+            callback : () => self.openCloseVideoPlaybackRate()
         });
     }
 
@@ -3218,12 +3479,17 @@ class Wwplayer
         }
 
         sourceChangeList.style.display = 'block';
-        const mouseOut                 = function ()
-        {
-            sourceChangeList.removeEventListener('mouseleave', mouseOut);
-            sourceChangeList.style.display = 'none';
-        };
-        sourceChangeList.addEventListener('mouseleave', mouseOut);
+
+        createListener({
+            elements : sourceChangeList,
+            events   : 'mouseleave',
+            listeners: this.listeners,
+            once     : true,
+            callback : () =>
+            {
+                sourceChangeList.style.display = 'none';
+            }
+        });
     }
 
     createDownload(): void
@@ -3256,12 +3522,17 @@ class Wwplayer
 
         downloadOption.appendChild(downloadClick);
 
-        downloadOption.addEventListener('click', () =>
-        {
-            const downloadItem    = document.getElementById(self.videoPlayerId + '_download') as HTMLAnchorElement;
-            downloadItem.download = self.originalSrc;
-            downloadItem.href     = self.originalSrc;
-            downloadClick.click();
+        createListener({
+            elements : downloadOption,
+            events   : 'click',
+            listeners: this.listeners,
+            callback : () =>
+            {
+                const downloadItem    = document.getElementById(self.videoPlayerId + '_download') as HTMLAnchorElement;
+                downloadItem.download = self.originalSrc;
+                downloadItem.href     = self.originalSrc;
+                downloadClick.click();
+            }
         });
     }
 
@@ -3636,43 +3907,90 @@ class Wwplayer
                 this.domRef.player.onended = functionCall;
                 break;
             case 'pause':
-                this.domRef.player.addEventListener('pause', () =>
-                {
-                    if (!this.wwPseudoPause)
+                createListener({
+                    elements : this.domRef.player,
+                    events   : 'pause',
+                    listeners: this.listeners,
+                    callback : () =>
                     {
-                        functionCall();
+                        if (!this.wwPseudoPause)
+                        {
+                            functionCall();
+                        }
                     }
                 });
                 break;
             case 'playing':
-                this.domRef.player.addEventListener('playing', functionCall);
+                createListener({
+                    elements : this.domRef.player,
+                    events   : 'playing',
+                    listeners: this.listeners,
+                    callback : (evt) => functionCall(evt)
+                });
                 break;
             case 'theatreModeOn':
-                this.domRef.player.addEventListener('theatreModeOn', functionCall);
+                createListener({
+                    elements : this.domRef.player,
+                    events   : 'theatreModeOn',
+                    listeners: this.listeners,
+                    callback : (evt) => functionCall(evt)
+                });
                 break;
             case 'theatreModeOff':
-                this.domRef.player.addEventListener('theatreModeOff', functionCall);
+                createListener({
+                    elements : this.domRef.player,
+                    events   : 'theatreModeOff',
+                    listeners: this.listeners,
+                    callback : (evt) => functionCall(evt)
+                });
                 break;
             case 'timeupdate':
-                this.domRef.player.addEventListener('timeupdate', () =>
-                {
-                    functionCall(this.getCurrentTime())
+                createListener({
+                    elements : this.domRef.player,
+                    events   : 'timeupdate',
+                    listeners: this.listeners,
+                    callback : () => functionCall(this.getCurrentTime())
                 });
                 break;
             case 'waiting':
-                this.domRef.player.addEventListener('waiting', functionCall);
+                createListener({
+                    elements : this.domRef.player,
+                    events   : 'waiting',
+                    listeners: this.listeners,
+                    callback : (evt) => functionCall(evt)
+                });
                 break;
             case 'loadedmetadata':
-                this.domRef.player.addEventListener('loadedmetadata', functionCall);
+                createListener({
+                    elements : this.domRef.player,
+                    events   : 'loadedmetadata',
+                    listeners: this.listeners,
+                    callback : (evt) => functionCall(evt)
+                });
                 break;
             case 'error':
-                this.domRef.player.addEventListener('error', functionCall);
+                createListener({
+                    elements : this.domRef.player,
+                    events   : 'error',
+                    listeners: this.listeners,
+                    callback : (evt) => functionCall(evt)
+                });
                 break;
             case 'durationchange':
-                this.domRef.player.addEventListener('durationchange', functionCall);
+                createListener({
+                    elements : this.domRef.player,
+                    events   : 'durationchange',
+                    listeners: this.listeners,
+                    callback : (evt) => functionCall(evt)
+                });
                 break;
             case 'hlsFragChanged':
-                this.domRef.player.addEventListener('wwFragChanged', functionCall);
+                createListener({
+                    elements : this.domRef.player,
+                    events   : 'wwFragChanged',
+                    listeners: this.listeners,
+                    callback : (evt) => functionCall(evt)
+                });
                 break;
             default:
                 console.log('[WWP_ERROR] Event not recognised');
@@ -3730,7 +4048,12 @@ class Wwplayer
         const currentElements = el.querySelectorAll(sel);
         for (let i = 0; i < currentElements.length; i++)
         {
-            currentElements[i].addEventListener(evt, handler);
+            createListener({
+                elements : currentElements[i],
+                events   : evt,
+                listeners: this.listeners,
+                callback : (evt) => handler(evt)
+            });
         }
     }
 
@@ -3760,18 +4083,14 @@ class Wwplayer
 
     destroy(): void
     {
-        const numDestructors = this.destructors.length;
-
-        if (0 === numDestructors)
-        {
-            return;
-        }
-
-        for (let i = 0; i < numDestructors; ++i)
-        {
-            this.destructors[i].bind(this)();
-        }
-
+        destroyListener(this.volumeListeners);
+        destroyListener(this.progressbarListeners);
+        destroyListener(this.listeners);
+        destroyListener(this.initialPlayListeners);
+        destroyListener(this.videoSourceSwitchListeners);
+        destroyListener(this.currentTimeAndPlayListeners);
+        destroyListener(this.mainVideoReadyListeners);
+        destroyListener(this.captureKeyListeners);
         const container = document.getElementById('ww_video_wrapper_' + this.videoPlayerId);
 
         if (!container)

@@ -31,7 +31,11 @@
             enabled: ['Streaming'],
             onAfterAllModulesInit: () =>
             {
-                console.log('onAfterAllModulesInit');
+                // console.log('onAfterAllModulesInit');
+                instance.on('ended', events =>
+                {
+                    console.log('ended', events);
+                });
             },
             onAfterInitHls: hls => {
                 // onFragParsingMetadata
@@ -40,9 +44,13 @@
                 //     const date = new Date(new Date(dateTime).toISOString());
                 //     console.log('[FRAG_CHANGED] current dateTime- ', date);
                 // });
-                hls.on(Hls.Events.MANIFEST_LOADED,function(event,data) {
-                    console.log('[MANIFEST_PARSED]', data);
-                });
+                // hls.on(Hls.Events.MANIFEST_LOADED,function(event,data) {
+                //     console.log('[MANIFEST_LOADED]', parseLines(data.networkDetails.response));
+                // });
+                // LEVEL_LOADED
+                // hls.on(Hls.Events.LEVEL_LOADED,function(event,data) {
+                //     console.log('[LEVEL_LOADED]', data.details.fragments.map(frag => frag.url));
+                // });
             },
         },
         layoutControls: {
@@ -62,6 +70,10 @@
         },
     });
 
+    function parseLines(body)
+    {
+        return body.split(/[\r\n]/).filter(item => item.trim().length > 0);
+    }
 
 </script>
 
