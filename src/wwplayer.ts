@@ -1102,9 +1102,9 @@ class Wwplayer
 
     controlPlayPauseToggle(id?: string): void
     {
-        const playPauseButton = (this.domRef.player.parentNode as HTMLElement).getElementsByClassName('ww_control_playpause');
+        const playPauseButton = (this.domRef.player.parentNode as HTMLElement)?.getElementsByClassName('ww_control_playpause');
         const menuOptionPlay  = document.getElementById(this.videoPlayerId + 'context_option_play');
-        const controlsDisplay = (this.domRef.player.parentNode as HTMLElement).getElementsByClassName('ww_controls_container');
+        const controlsDisplay = (this.domRef.player.parentNode as HTMLElement)?.getElementsByClassName('ww_controls_container');
         const fpLogo          = document.getElementById(this.videoPlayerId + '_logo');
 
         const initialPlay = document.getElementById(this.videoPlayerId + '_ww_initial_play');
