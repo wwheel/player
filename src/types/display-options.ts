@@ -94,7 +94,9 @@ export interface ILayoutControls
     controlForwardBackward?: IControlForwardBackward;
     fullscreenHandler?: () => void;
     controlFullscreen?: boolean;
+    controlDuration?: boolean;
     contextMenu?: IContextMenu;
+    customControls?: ICustomControl[];
 }
 
 export interface IVastOptions
@@ -155,6 +157,13 @@ export interface IModules
     onBeforeInitDash?: (dash) => void;
     onAfterInitDash?: (dash) => void;
     onAfterAllModulesInit?: () => void;
+}
+
+export interface ICustomControl
+{
+    id?: string;
+    className: string;
+    innerHTML: string;
 }
 
 export interface IDisplayOptions

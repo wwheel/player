@@ -443,24 +443,24 @@ class Wwplayer
             },
             debug                     : WWP_RUNTIME_DEBUG,
             modules                   : {
-                configureHls    : (options) =>
+                configureHls         : (options) =>
                 {
                     return options;
                 },
-                onBeforeInitHls : (hls) =>
+                onBeforeInitHls      : (hls) =>
                 {
                 },
-                onAfterInitHls  : (hls) =>
+                onAfterInitHls       : (hls) =>
                 {
                 },
-                configureDash   : (options) =>
+                configureDash        : (options) =>
                 {
                     return options;
                 },
-                onBeforeInitDash: (dash) =>
+                onBeforeInitDash     : (dash) =>
                 {
                 },
-                onAfterInitDash : (dash) =>
+                onAfterInitDash      : (dash) =>
                 {
                 },
                 onAfterAllModulesInit: () =>
@@ -1090,12 +1090,32 @@ class Wwplayer
         controls.mute.className = 'ww_button ww_button_volume ww_control_mute';
         controls.rightContainer.appendChild(controls.mute);
 
-        // Right container -> Volume container
         controls.duration           = document.createElement('div');
         controls.duration.id        = this.videoPlayerId + '_ww_control_duration';
         controls.duration.className = 'ww_control_duration ww_ww_control_duration';
         controls.duration.innerText = '00:00 / 00:00';
         controls.rightContainer.appendChild(controls.duration);
+
+        // Right container -> Volume container
+        if (
+            !this.displayOptions.layoutControls.controlDuration &&
+            typeof this.displayOptions.layoutControls.controlDuration === 'boolean'
+        )
+        {
+            controls.duration.style.setProperty('display', 'none', 'important');
+        }
+
+        if (Array.isArray(this.displayOptions.layoutControls.customControls))
+        {
+            this.displayOptions.layoutControls.customControls.forEach((value, index) =>
+            {
+                const control     = document.createElement('div');
+                control.id        = this.videoPlayerId + '_ww_custom_control_' + index;
+                control.className = 'ww_custom_control ' + value.className;
+                control.innerHTML = value.innerHTML;
+                controls.rightContainer.appendChild(control);
+            });
+        }
 
         return controls;
     }
@@ -1116,12 +1136,12 @@ class Wwplayer
 
         if (!this.domRef.player.paused)
         {
-            for (let i = 0; i < playPauseButton.length; i++)
+            for (let i = 0; i < playPauseButton?.length; i++)
             {
                 playPauseButton[i].className = playPauseButton[i].className.replace(/\bww_button_play\b/g, 'ww_button_pause');
             }
 
-            for (let i = 0; i < controlsDisplay.length; i++)
+            for (let i = 0; i < controlsDisplay?.length; i++)
             {
                 controlsDisplay[i].classList.remove('initial_controls_show');
             }
@@ -1139,12 +1159,12 @@ class Wwplayer
             return;
         }
 
-        for (let i = 0; i < playPauseButton.length; i++)
+        for (let i = 0; i < playPauseButton?.length; i++)
         {
             playPauseButton[i].className = playPauseButton[i].className.replace(/\bww_button_pause\b/g, 'ww_button_play');
         }
 
-        for (let i = 0; i < controlsDisplay.length; i++)
+        for (let i = 0; i < controlsDisplay?.length; i++)
         {
             controlsDisplay[i].classList.add('initial_controls_show');
         }
@@ -4048,14 +4068,14 @@ class Wwplayer
 
     destroy(): void
     {
-        // destroyListener(this.volumeListeners);
-        // destroyListener(this.progressbarListeners);
-        // destroyListener(this.listeners);
-        // destroyListener(this.initialPlayListeners);
-        // destroyListener(this.videoSourceSwitchListeners);
-        // destroyListener(this.currentTimeAndPlayListeners);
-        // destroyListener(this.mainVideoReadyListeners);
-        // destroyListener(this.captureKeyListeners);
+        destroyListener(this.volumeListeners);
+        destroyListener(this.progressbarListeners);
+        destroyListener(this.listeners);
+        destroyListener(this.initialPlayListeners);
+        destroyListener(this.videoSourceSwitchListeners);
+        destroyListener(this.currentTimeAndPlayListeners);
+        destroyListener(this.mainVideoReadyListeners);
+        destroyListener(this.captureKeyListeners);
         const container = document.getElementById('ww_video_wrapper_' + this.videoPlayerId);
 
         if (!container)
