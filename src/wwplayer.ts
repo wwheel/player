@@ -935,6 +935,14 @@ class Wwplayer
         controls.root.className = 'ww_controls_container';
         controls.root.id        = this.videoPlayerId + '_ww_controls_container';
 
+        if (
+            !this.displayOptions.layoutControls.controlPanel &&
+            typeof this.displayOptions.layoutControls.controlPanel === 'boolean'
+        )
+        {
+            controls.root.classList.add('ww_hidden');
+        }
+
         if (!options.displayVolumeBar)
         {
             controls.root.className = controls.root.className + ' no_volume_bar';
@@ -3867,7 +3875,7 @@ class Wwplayer
 
     toggleControlBar(show?: boolean): void
     {
-        const controlBar = document.getElementById(this.videoPlayerId + 'ww_controls_container');
+        const controlBar = document.getElementById(this.videoPlayerId + '_ww_controls_container');
 
         if (show)
         {

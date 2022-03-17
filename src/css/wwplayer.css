@@ -1315,3 +1315,7 @@ _:-ms-lang(x),
     content: 'HD';
     padding-left: 3px;
 }
+
+.ww_video_wrapper .ww_controls_container.ww_hidden {
+    display: none !important;
+}
