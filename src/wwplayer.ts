@@ -4194,6 +4194,11 @@ const wwPlayerInterface = function (instance: Wwplayer)
         return instance.currentProgramDateTime;
     };
 
+    this.getCurrentTime = () =>
+    {
+        return instance.getCurrentTime();
+    };
+
     this.on = (event: string, callback: (...events: any) => any) =>
     {
         return instance.on(event, callback)
