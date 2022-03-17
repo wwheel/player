@@ -21,4 +21,5 @@ export interface IWWPlayer
     isMuted(): boolean;
     getCurrentProgramDateTime(): Date;
     getCurrentTime(): number;
+    getCurrentVideoDuration(): number;
 }

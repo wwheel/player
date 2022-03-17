@@ -3899,6 +3899,14 @@ class Wwplayer
             case 'ended':
                 this.domRef.player.onended = functionCall;
                 break;
+            case 'volumechange':
+                createListener({
+                    elements : this.domRef.player,
+                    events   : 'volumechange',
+                    listeners: this.listeners,
+                    callback : (event) => functionCall(event)
+                });
+                break;
             case 'pause':
                 createListener({
                     elements : this.domRef.player,
@@ -4197,6 +4205,11 @@ const wwPlayerInterface = function (instance: Wwplayer)
     this.getCurrentTime = () =>
     {
         return instance.getCurrentTime();
+    };
+
+    this.getCurrentVideoDuration = () =>
+    {
+        return instance.getCurrentVideoDuration();
     };
 
     this.on = (event: string, callback: (...events: any) => any) =>
