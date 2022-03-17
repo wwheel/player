@@ -1317,5 +1317,5 @@ _:-ms-lang(x),
 }
 
 .ww_video_wrapper .ww_controls_container.ww_hidden {
-    display: none !important;
+    visibility: hidden !important;
 }

@@ -157,7 +157,6 @@ export interface IModules
     configureDash?: (options) => any;
     onBeforeInitDash?: (dash) => void;
     onAfterInitDash?: (dash) => void;
-    onAfterAllModulesInit?: () => void;
 }
 
 export interface ICustomControl

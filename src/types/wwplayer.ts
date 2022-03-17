@@ -22,4 +22,5 @@ export interface IWWPlayer
     getCurrentProgramDateTime(): Date;
     getCurrentTime(): number;
     getCurrentVideoDuration(): number;
+    getVolume(): number;
 }

@@ -463,9 +463,6 @@ class Wwplayer
                 onAfterInitDash      : (dash) =>
                 {
                 },
-                onAfterAllModulesInit: () =>
-                {
-                }
             },
             onBeforeXMLHttpRequestOpen: (request) =>
             {
@@ -754,8 +751,6 @@ class Wwplayer
         catch (_ignored)
         {
         }
-
-        this.displayOptions.modules.onAfterAllModulesInit();
     }
 
     getCurrentVideoDuration(): number
@@ -3819,6 +3814,11 @@ class Wwplayer
         this.wwStorage.wwVolume = latestVolume;
     }
 
+    getVolume(): number
+    {
+        return this.domRef.player.volume;
+    }
+
     isCurrentlyPlayingVideo(instance: HTMLVideoElement): boolean
     {
         return instance && instance.currentTime > 0 && !instance.paused && !instance.ended && instance.readyState > 2;
@@ -4210,6 +4210,11 @@ const wwPlayerInterface = function (instance: Wwplayer)
     this.getCurrentVideoDuration = () =>
     {
         return instance.getCurrentVideoDuration();
+    };
+
+    this.getVolume = () =>
+    {
+        return instance.getVolume();
     };
 
     this.on = (event: string, callback: (...events: any) => any) =>
