@@ -9,8 +9,24 @@
     <%= htmlWebpackPlugin.tags.headTags %>
     <style lang="css">
         #fluid-player-e2e-case {
-            width: 90%;
+            width: 70%;
         }
+        .ww_custom_control.live-badge-control {
+            position: absolute;
+            left: 95px;
+            font-size: 14px;
+            text-transform: uppercase;
+            opacity: 0.9;
+            top: 3px;
+            display: flex!important;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .ww_custom_control.live-badge-control .live-badge {
+            margin-left: 5px;
+        }
+
     </style>
 </head>
 <body>
@@ -54,6 +70,13 @@
             },
         },
         layoutControls: {
+            customControls: [
+                {
+                    className: 'live-badge-control',
+                    innerHTML: `<svg viewBox="0 0 120 120" width="12" height="12" version="1.1" fill="red" xmlns="http://www.w3.org/2000/svg"><circle cx="60" cy="60" r="50"/></svg><span class="live-badge">Live</span>`
+                }
+            ],
+            controlDuration: false,
             autoPlay: true,
             mute: true,
             contextMenu: {

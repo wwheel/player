@@ -61,7 +61,7 @@ export interface IContextMenu
 export interface ILayoutControls
 {
     mediaType?: string;
-    primaryColor?: boolean;
+    primaryColor?: boolean|string;
     posterImage?: boolean;
     posterImageSize?: string;
     adProgressColor?: string;
