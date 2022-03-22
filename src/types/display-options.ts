@@ -95,6 +95,7 @@ export interface ILayoutControls
     fullscreenHandler?: () => void;
     controlFullscreen?: boolean;
     controlDuration?: boolean;
+    controlProgress?: boolean;
     controlPanel?: boolean;
     contextMenu?: IContextMenu;
     customControls?: ICustomControl[];

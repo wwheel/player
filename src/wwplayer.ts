@@ -980,6 +980,14 @@ class Wwplayer
         controls.progressContainer.id        = this.videoPlayerId + '_ww_controls_progress_container';
         controls.root.appendChild(controls.progressContainer);
 
+        if (
+            !this.displayOptions.layoutControls.controlProgress &&
+            typeof this.displayOptions.layoutControls.controlProgress === 'boolean'
+        )
+        {
+            controls.progressContainer.style.setProperty('display', 'none', 'important');
+        }
+
         // Progress container -> Progress wrapper
         controls.progressWrapper           = document.createElement('div');
         controls.progressWrapper.className = 'ww_controls_progress';
