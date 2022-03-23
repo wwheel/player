@@ -31,75 +31,55 @@
 </head>
 <body>
 
-<video id="fluid-player-e2e-case">
-    <!--<source src="https://vod-qa.immerss.live/1725/channels/481/a52f1e5e17117f566bfd65e6c6c417ad/playlist.m3u8"
-            type="application/x-mpegURL">-->
-    <source src="https://fcc3ddae59ed.us-west-2.playback.live-video.net/api/video/v1/us-west-2.893648527354.channel.xhP3ExfcX8ON.m3u8"
-            type="application/x-mpegURL">
-    <!--    <source src="https://multiplatform-f.akamaihd.net/i/multi/will/bunny/big_buck_bunny_,640x360_400,640x360_700,640x360_1000,950x540_1500,.f4v.csmil/master.m3u8" type="application/x-mpegURL"/>-->
-</video>
 
 <%= htmlWebpackPlugin.tags.bodyTags %>
 <script src="../../dist/wwplayer.min.js"></script>
 <script>
-    var instance = wwPlayer('fluid-player-e2e-case', {
-        modules: {
-            enabled: ['Streaming'],
-            onAfterAllModulesInit: () =>
-            {
-                console.log('onAfterAllModulesInit');
-                instance.on('ended', events =>
+    // https://immerss-live-assets-qa.s3.amazonaws.com/vece_db/widget_config/2/fp_pic/video.mp4
+    // https://multiplatform-f.akamaihd.net/i/multi/will/bunny/big_buck_bunny_,640x360_400,640x360_700,640x360_1000,950x540_1500,.f4v.csmil/master.m3u8
+    // https://vod-qa.immerss.live/1725/channels/481/a52f1e5e17117f566bfd65e6c6c417ad/playlist.m3u8
+    // const src = 'https://fcc3ddae59ed.us-west-2.playback.live-video.net/api/video/v1/us-west-2.893648527354.channel.xhP3ExfcX8ON.m3u8';
+
+    window.onInit = () => {
+
+        const videoEl = document.createElement('video');
+        videoEl.id = 'fluid-player-e2e-case';
+        videoEl.innerHTML = `
+        <source src="https://fcc3ddae59ed.us-west-2.playback.live-video.net/api/video/v1/us-west-2.893648527354.channel.xhP3ExfcX8ON.m3u8"
+            type="application/x-mpegURL">`;
+        document.body.append(videoEl);
+
+        window.instance = wwPlayer(videoEl, {
+            modules: {
+                enabled: ['Streaming'],
+                onAfterAllModulesInit: () =>
                 {
-                    console.log('ended', events);
-                });
+                    console.log('onAfterAllModulesInit');
+                },
             },
-            onAfterInitHls: hls => {
-                // onFragParsingMetadata
-                // hls.on(Hls.Events.FRAG_CHANGED,function(event,data) {
-                //     const dateTime = data.frag.programDateTime;
-                //     const date = new Date(new Date(dateTime).toISOString());
-                //     console.log('[FRAG_CHANGED] current dateTime- ', date);
-                // });
-                // hls.on(Hls.Events.MANIFEST_LOADED,function(event,data) {
-                //     console.log('[MANIFEST_LOADED]', parseLines(data.networkDetails.response));
-                // });
-                // LEVEL_LOADED
-                // hls.on(Hls.Events.LEVEL_LOADED,function(event,data) {
-                //     console.log('[LEVEL_LOADED]', data.details.fragments.map(frag => frag.url));
-                // });
+            layoutControls: {
+                controlProgress: false,
+                autoPlay: true,
+                mute: true,
+                contextMenu: {
+                    controls: false,
+                    links   : [
+                        {
+                            href : 'https://immerss.live',
+                            label: `<span>Powered by IMMERSS</span>`
+                        }
+                    ]
+                },
+                controlFullscreen: false,
             },
-        },
-        layoutControls: {
-            // customControls: [
-            //     {
-            //         className: 'live-badge-control',
-            //         innerHTML: `<svg viewBox="0 0 120 120" width="12" height="12" version="1.1" fill="red" xmlns="http://www.w3.org/2000/svg"><circle cx="60" cy="60" r="50"/></svg><span class="live-badge">Live</span>`
-            //     }
-            // ],
-            // controlDuration: true,
-            controlProgress: false,
-            autoPlay: true,
-            mute: true,
-            contextMenu: {
-                controls: false,
-                links   : [
-                    {
-                        href : 'https://immerss.live',
-                        label: `<span>Powered by IMMERSS</span>`
-                    }
-                ]
-            },
-            controlFullscreen: false,
-            // controlPanel: false,
-            fullscreenHandler: () => console.log('fullscreenHandler'),
-        },
-    });
+        });
+    };
 
-    function parseLines(body)
-    {
-        return body.split(/[\r\n]/).filter(item => item.trim().length > 0);
-    }
+    window.onDestroy = () => {
+        window.instance.destroy();
+    };
 
+    window.onInit();
 </script>
 
 </body>

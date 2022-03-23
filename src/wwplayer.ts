@@ -875,7 +875,7 @@ class Wwplayer
         {
             if (sources[i].getAttribute('src') === this.originalSrc)
             {
-                return sources[i].getAttribute('type').toLowerCase();
+                return sources[i].getAttribute('type')?.toLowerCase();
             }
         }
 
@@ -4092,6 +4092,11 @@ class Wwplayer
 
     destroy(): void
     {
+        if (this.getStreaming()?.detachStreamers)
+        {
+            this.getStreaming().detachStreamers();
+        }
+
         destroyListener(this.volumeListeners);
         destroyListener(this.progressbarListeners);
         destroyListener(this.listeners);
