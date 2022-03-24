@@ -44,6 +44,9 @@
 
         const videoEl = document.createElement('video');
         videoEl.id = 'fluid-player-e2e-case';
+        // videoEl.innerHTML = `
+        // <source src="https://vod-uat.immerss.live/4250/13545/9ec05f0ec166bb5861b20d4106a793a2/playlist.m3u8"
+        //     type="application/x-mpegURL">`;
         videoEl.innerHTML = `
         <source src="https://fcc3ddae59ed.us-west-2.playback.live-video.net/api/video/v1/us-west-2.893648527354.channel.xhP3ExfcX8ON.m3u8"
             type="application/x-mpegURL">`;
@@ -52,13 +55,17 @@
         window.instance = wwPlayer(videoEl, {
             modules: {
                 enabled: ['Streaming'],
-                onAfterAllModulesInit: () =>
+                configureHls: options =>
                 {
-                    console.log('onAfterAllModulesInit');
-                },
+                    options.enableWorker     = true;
+                    options.lowLatencyMode   = true;
+                    options.backBufferLength = 90;
+                    options.liveSyncDurationCount = 5;
+                    return options;
+                }
             },
             layoutControls: {
-                controlProgress: false,
+                controlProgress: true,
                 autoPlay: true,
                 mute: true,
                 contextMenu: {

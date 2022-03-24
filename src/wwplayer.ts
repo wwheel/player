@@ -204,7 +204,7 @@ class Wwplayer
             debug      : WWP_RUNTIME_DEBUG,
         };
 
-        if (Array.isArray(options.modules?.enabled))
+        if (options.modules?.enabled?.length > 0)
         {
             for (const m of options.modules.enabled)
             {
@@ -576,7 +576,7 @@ class Wwplayer
         // DO NOT initialize streamers if there are pre-rolls. It will break the streamers!
         // Streamers will re-initialize once ad has been shown.
         const preRolls = this.findRoll('preRoll');
-        const notRolls = !preRolls || 0 === preRolls.length;
+        const notRolls = !preRolls || 0 === preRolls?.length;
         if (notRolls && this.getStreaming()?.initialiseStreamers)
         {
             await this.getStreaming().initialiseStreamers();
@@ -742,7 +742,7 @@ class Wwplayer
         {
             if (!!this.domRef.player.textTracks)
             {
-                for (let i = 0, L = this.domRef.player.textTracks.length; i < L; i++)
+                for (let i = 0, L = this.domRef.player.textTracks?.length; i < L; i++)
                 {
                     this.domRef.player.textTracks[i].mode = 'hidden';
                 }
@@ -851,7 +851,7 @@ class Wwplayer
     {
         const sources = this.domRef.player.getElementsByTagName('source');
 
-        if (sources.length)
+        if (sources?.length)
         {
             return sources[0].getAttribute('src');
         }
@@ -866,12 +866,12 @@ class Wwplayer
     {
         const sources = this.domRef.player.getElementsByTagName('source');
 
-        if (!sources.length)
+        if (!sources?.length)
         {
             return null;
         }
 
-        for (let i = 0; i < sources.length; i++)
+        for (let i = 0; i < sources?.length; i++)
         {
             if (sources[i].getAttribute('src') === this.originalSrc)
             {
@@ -1116,7 +1116,7 @@ class Wwplayer
             controls.duration.style.setProperty('display', 'none', 'important');
         }
 
-        if (Array.isArray(this.displayOptions.layoutControls.customControls))
+        if (this.displayOptions.layoutControls.customControls?.length > 0)
         {
             this.displayOptions.layoutControls.customControls.forEach((value, index) =>
             {
@@ -1234,7 +1234,7 @@ class Wwplayer
     {
         const currentProgressTag = (this.domRef.player.parentNode as HTMLElement).getElementsByClassName('ww_controls_currentprogress');
 
-        for (let i = 0; i < currentProgressTag.length; i++)
+        for (let i = 0; i < currentProgressTag?.length; i++)
         {
             (currentProgressTag[i] as HTMLElement).style.width = (this.domRef.player.currentTime / this.currentVideoDuration * 100) + '%';
         }
@@ -1265,7 +1265,7 @@ class Wwplayer
 
         const timePlaceholder = (this.domRef.player.parentNode as HTMLElement).getElementsByClassName('ww_control_duration');
 
-        for (let i = 0; i < timePlaceholder.length; i++)
+        for (let i = 0; i < timePlaceholder?.length; i++)
         {
             timePlaceholder[i].innerHTML = durationText;
         }
@@ -1292,7 +1292,7 @@ class Wwplayer
 
         if (this.domRef.player.volume && !this.domRef.player.muted)
         {
-            for (let i = 0; i < muteButtonTag.length; i++)
+            for (let i = 0; i < muteButtonTag?.length; i++)
             {
                 muteButtonTag[i].className = muteButtonTag[i].className.replace(/\bww_button_mute\b/g, 'ww_button_volume');
             }
@@ -1305,7 +1305,7 @@ class Wwplayer
         }
         else
         {
-            for (let i = 0; i < muteButtonTag.length; i++)
+            for (let i = 0; i < muteButtonTag?.length; i++)
             {
                 muteButtonTag[i].className = muteButtonTag[i].className.replace(/\bww_button_volume\b/g, 'ww_button_mute');
             }
@@ -1395,7 +1395,7 @@ class Wwplayer
 
     fullscreenOff(fullscreenButton, menuOptionFullscreen): void
     {
-        for (let i = 0; i < fullscreenButton.length; i++)
+        for (let i = 0; i < fullscreenButton?.length; i++)
         {
             fullscreenButton[i].className = fullscreenButton[i].className.replace(/\bww_button_fullscreen_exit\b/g, 'ww_button_fullscreen');
         }
@@ -1408,7 +1408,7 @@ class Wwplayer
 
     fullscreenOn(fullscreenButton, menuOptionFullscreen): void
     {
-        for (let i = 0; i < fullscreenButton.length; i++)
+        for (let i = 0; i < fullscreenButton?.length; i++)
         {
             fullscreenButton[i].className = fullscreenButton[i].className.replace(/\bww_button_fullscreen\b/g, 'ww_button_fullscreen_exit');
         }
@@ -1538,7 +1538,7 @@ class Wwplayer
         {
             const results = el.style.transform.match(/translate3d\((-?\d+px,\s?){2}-?\d+px\)/);
 
-            if (results && results.length)
+            if (results && results?.length)
             {
                 coordinates = results[0]
                     .replace('translate3d(', '')
@@ -1553,7 +1553,7 @@ class Wwplayer
             coordinates = null;
         }
 
-        return (coordinates && (coordinates.length === 3)) ? parseInt(coordinates[0]) : 0;
+        return (coordinates && (coordinates?.length === 3)) ? parseInt(coordinates[0]) : 0;
     }
 
     getEventOffsetX(evt: any, el: HTMLElement): number
@@ -2057,9 +2057,9 @@ class Wwplayer
         const isFirstStart = !this.firstPlayLaunched;
         const preRolls     = this.findRoll('preRoll');
 
-        if (!isFirstStart || preRolls.length === 0)
+        if (!isFirstStart || preRolls?.length === 0)
         {
-            if (isFirstStart && preRolls.length === 0)
+            if (isFirstStart && preRolls?.length === 0)
             {
                 this.firstPlayLaunched = true;
                 this.displayOptions.vastOptions.vastAdvanced.noVastVideoCallback();
@@ -2142,7 +2142,7 @@ class Wwplayer
             {
                 this.getVAST().prepareVast('preRoll');
             }
-            this.preRollAdPodsLength = preRolls.length;
+            this.preRollAdPodsLength = preRolls?.length;
         }
 
         const prepareVastAdsThatKnowDuration = () =>
@@ -2596,8 +2596,8 @@ class Wwplayer
     checkIfVolumebarIsRendered(): boolean
     {
         const volumeposTag        = document.getElementById(this.videoPlayerId + '_ww_control_volume_currentpos');
-        const volumebarTotalWidth = document.getElementById(this.videoPlayerId + '_ww_control_volume').clientWidth;
-        const volumeposTagWidth   = volumeposTag.clientWidth;
+        const volumebarTotalWidth = document.getElementById(this.videoPlayerId + '_ww_control_volume')?.clientWidth;
+        const volumeposTagWidth   = volumeposTag?.clientWidth;
 
         return volumeposTagWidth !== volumebarTotalWidth;
     }
@@ -2707,7 +2707,7 @@ class Wwplayer
         });
 
         this.videoSources = sources;
-        if (this.videoSources.length <= 1)
+        if (this.videoSources?.length <= 1)
         {
             return;
         }
@@ -2750,7 +2750,7 @@ class Wwplayer
 
                 const videoChangedTo = this;
                 const sourceIcons    = document.getElementsByClassName('source_button_icon');
-                for (let i = 0; i < sourceIcons.length; i++)
+                for (let i = 0; i < sourceIcons?.length; i++)
                 {
                     sourceIcons[i].className = sourceIcons[i].className.replace('source_selected', '');
                 }
@@ -3187,7 +3187,7 @@ class Wwplayer
             ? ['touchstart', 'touchmove', 'touchend']
             : ['mousemove', 'mousedown', 'mouseup'];
 
-        for (let i = 0; i < listenTo.length; i++)
+        for (let i = 0; i < listenTo?.length; i++)
         {
             createListener({
                 elements : videoPlayer,
@@ -3241,7 +3241,7 @@ class Wwplayer
         const divVastControls = (this.domRef.player.parentNode as HTMLElement).getElementsByClassName('ww_controls_container');
         const fpLogo          = (this.domRef.player.parentNode as HTMLElement).getElementsByClassName('fp_logo');
 
-        for (let i = 0; i < divVastControls.length; i++)
+        for (let i = 0; i < divVastControls?.length; i++)
         {
             if (this.displayOptions.layoutControls.controlBar.animated)
             {
@@ -3254,7 +3254,7 @@ class Wwplayer
             }
         }
 
-        for (let i = 0; i < fpLogo.length; i++)
+        for (let i = 0; i < fpLogo?.length; i++)
         {
             if (this.displayOptions.layoutControls.controlBar.animated)
             {
@@ -3296,7 +3296,7 @@ class Wwplayer
 
         const divVastControls = (this.domRef.player.parentNode as HTMLElement).getElementsByClassName('ww_controls_container');
         const fpLogo          = (this.domRef.player.parentNode as HTMLElement).getElementsByClassName('fp_logo');
-        for (let i = 0; i < divVastControls.length; i++)
+        for (let i = 0; i < divVastControls?.length; i++)
         {
             if (this.displayOptions.layoutControls.controlBar.animated)
             {
@@ -3309,7 +3309,7 @@ class Wwplayer
             }
         }
 
-        for (let i = 0; i < fpLogo.length; i++)
+        for (let i = 0; i < fpLogo?.length; i++)
         {
             if (this.displayOptions.layoutControls.controlBar.animated)
             {
@@ -3375,7 +3375,7 @@ class Wwplayer
         let progressInterval;
         const bufferBar = (this.domRef.player.parentNode as HTMLElement).getElementsByClassName('ww_controls_buffered');
 
-        for (let j = 0; j < bufferBar.length; j++)
+        for (let j = 0; j < bufferBar?.length; j++)
         {
             (bufferBar[j] as HTMLElement).style.width = '0';
         }
@@ -3389,22 +3389,22 @@ class Wwplayer
                 return;
             }
 
-            for (let i = 0; i < this.domRef.player.buffered.length; i++)
+            for (let i = 0; i < this.domRef.player.buffered?.length; i++)
             {
-                if (this.domRef.player.buffered.start(this.domRef.player.buffered.length - 1 - i) >= this.domRef.player.currentTime)
+                if (this.domRef.player.buffered.start(this.domRef.player.buffered?.length - 1 - i) >= this.domRef.player.currentTime)
                 {
                     continue;
                 }
 
-                const newBufferLength = (this.domRef.player.buffered.end(this.domRef.player.buffered.length - 1 - i) / duration) * 100 + '%';
+                const newBufferLength = (this.domRef.player.buffered.end(this.domRef.player.buffered?.length - 1 - i) / duration) * 100 + '%';
 
-                for (let j = 0; j < bufferBar.length; j++)
+                for (let j = 0; j < bufferBar?.length; j++)
                 {
                     (bufferBar[j] as HTMLElement).style.width = newBufferLength;
                 }
 
                 // Stop checking for buffering if the video is fully buffered
-                if (!!progressInterval && 1 === (this.domRef.player.buffered.end(this.domRef.player.buffered.length - 1 - i) / duration))
+                if (!!progressInterval && 1 === (this.domRef.player.buffered.end(this.domRef.player.buffered?.length - 1 - i) / duration))
                 {
                     clearInterval(progressInterval);
                 }
@@ -3627,15 +3627,15 @@ class Wwplayer
         {
             case 'center':
                 // We must calculate the margin differently based on whether they passed % or px
-                if (typeof (workingWidth) == 'string' && workingWidth.substr(workingWidth.length - 1) === '%')
+                if (typeof (workingWidth) == 'string' && workingWidth.substr(workingWidth?.length - 1) === '%')
                 {
                     // A margin of half the remaining space
-                    defaultHorizontalMargin = ((100 - parseInt(workingWidth.substring(0, workingWidth.length - 1))) / 2) + '%';
+                    defaultHorizontalMargin = ((100 - parseInt(workingWidth.substring(0, workingWidth?.length - 1))) / 2) + '%';
                 }
-                else if (typeof (workingWidth) == 'string' && workingWidth.substr(workingWidth.length - 2) === 'px')
+                else if (typeof (workingWidth) == 'string' && workingWidth.substr(workingWidth?.length - 2) === 'px')
                 {
                     // Half the (Remaining width / fullwidth)
-                    defaultHorizontalMargin = (((screen.width - parseInt(workingWidth.substring(0, workingWidth.length - 2))) / screen.width) * 100 / 2) + '%';
+                    defaultHorizontalMargin = (((screen.width - parseInt(workingWidth.substring(0, workingWidth?.length - 2))) / screen.width) * 100 / 2) + '%';
                 }
                 else
                 {
@@ -3685,12 +3685,12 @@ class Wwplayer
     {
         const sources = this.domRef.player.getElementsByTagName('source');
 
-        if (!sources.length)
+        if (!sources?.length)
         {
             return null;
         }
 
-        for (let i = 0; i < sources.length - 1; i++)
+        for (let i = 0; i < sources?.length - 1; i++)
         {
             if (sources[i].getAttribute('src') === this.originalSrc && sources[i + 1].getAttribute('src'))
             {
@@ -4055,7 +4055,7 @@ class Wwplayer
     registerListener(el: Document|HTMLElement|Element|ParentNode, evt: string, sel: string, handler: (...evn) => any): void
     {
         const currentElements = el.querySelectorAll(sel);
-        for (let i = 0; i < currentElements.length; i++)
+        for (let i = 0; i < currentElements?.length; i++)
         {
             createListener({
                 elements : currentElements[i],
@@ -4082,7 +4082,7 @@ class Wwplayer
                     continue;
                 }
 
-                for (let i = 0; i < this.events[sel][evt].length; i++)
+                for (let i = 0; i < this.events[sel][evt]?.length; i++)
                 {
                     this.registerListener(topLevelEl, evt, sel, this.events[sel][evt][i]);
                 }
@@ -4269,7 +4269,7 @@ const wwPlayerInitializer = function (target: HTMLVideoElement|string|String, op
         (window as any).wwPlayerDebug.push(debugApi);
 
         console.log('Created instance of WW Player. ' +
-            'Debug API available at window.wwPlayerDebug[' + ((window as any).wwPlayerDebug.length - 1) + '].', debugApi);
+            'Debug API available at window.wwPlayerDebug[' + ((window as any).wwPlayerDebug?.length - 1) + '].', debugApi);
     }
 
     return publicInstance;
