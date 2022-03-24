@@ -181,7 +181,14 @@ export default function (playerInstance, options)
         else if (playerInstance.hlsPlayer)
         {
             playerInstance.hlsPlayer.off(Hls.Events.FRAG_CHANGED, playerInstance.handleHlsProgramDateTime);
-            playerInstance.hlsPlayer.destroy();
+            try
+            {
+                playerInstance.hlsPlayer.destroy();
+            }
+            catch (e)
+            {
+                console.log(e);
+            }
             playerInstance.hlsPlayer = false;
         }
     };
