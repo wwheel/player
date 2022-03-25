@@ -3712,9 +3712,21 @@ class Wwplayer
         }
     }
 
+    isLocalStorageNotAllowed(): boolean
+    {
+        try
+        {
+            return !(typeof (Storage) !== 'undefined' && typeof (localStorage) !== 'undefined');
+        }
+        catch (e)
+        {
+            return false;
+        }
+    }
+
     setPersistentSettings(): boolean
     {
-        if (!(typeof (Storage) !== 'undefined' && typeof (localStorage) !== 'undefined'))
+        if (this.isLocalStorageNotAllowed())
         {
             return;
         }
