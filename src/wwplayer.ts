@@ -3720,7 +3720,7 @@ class Wwplayer
         }
         catch (e)
         {
-            return false;
+            return true;
         }
     }
 
