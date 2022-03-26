@@ -165,6 +165,7 @@ export interface ICustomControl
     id?: string;
     className: string;
     innerHTML: string;
+    click?: (e) => void
 }
 
 export interface IDisplayOptions

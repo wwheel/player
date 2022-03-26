@@ -21,6 +21,7 @@
             display: flex!important;
             justify-content: center;
             align-items: center;
+            cursor: pointer;
         }
 
         .ww_custom_control.live-badge-control .live-badge {
@@ -65,14 +66,15 @@
                 {
                     options.enableWorker     = true;
                     options.lowLatencyMode   = true;
-                    options.backBufferLength = 90;
-                    options.liveSyncDurationCount = 5;
+                    // options.backBufferLength = 90;
+                    // options.liveSyncDurationCount = 5;
                     return options;
                 }
             },
             layoutControls: {
                 customControls: [
                     {
+                        click: e => console.log(e),
                         className: 'live-badge-control',
                         innerHTML: `<svg viewBox="0 0 120 120" width="12" height="12" version="1.1" fill="red" xmlns="http://www.w3.org/2000/svg"><circle cx="60" cy="60" r="50"/></svg><span class="live-badge">Live</span>`
                     }

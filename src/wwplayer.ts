@@ -1125,6 +1125,16 @@ class Wwplayer
                 control.className = 'ww_custom_control ' + value.className;
                 control.innerHTML = value.innerHTML;
                 controls.rightContainer.appendChild(control);
+
+                if (typeof value.click === 'function')
+                {
+                    createListener({
+                        elements : control,
+                        events   : 'click',
+                        listeners: this.listeners,
+                        callback : (e) => value.click(e)
+                    });
+                }
             });
         }
 
