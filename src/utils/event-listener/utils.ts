@@ -22,7 +22,7 @@ export const getEvents = (events: string): string[] =>
 
 function arrayFrom(arrayLike: ArrayLike<any>): any[]
 {
-    const l = arrayLike.length;
+    const l = arrayLike?.length || 0;
     const arr = [];
     for (let i = 0; i < l; i++)
     {

@@ -41,6 +41,150 @@
     // https://vod-qa.immerss.live/1725/channels/481/a52f1e5e17117f566bfd65e6c6c417ad/playlist.m3u8
     // const src = 'https://fcc3ddae59ed.us-west-2.playback.live-video.net/api/video/v1/us-west-2.893648527354.channel.xhP3ExfcX8ON.m3u8';
 
+    let player;
+    let isEnded;
+    let lastEvent;
+    let isWaiting = false;
+    let hasInterval = false;
+    let wowzaStreamInterval;
+    let waitingEventTimeout;
+    let allEventTimeout;
+    let isLive;
+    let startAt;
+    let streamUrl;
+    let streamSource;
+    let currentChunkNumber = 0;
+    let timeupdate = 0;
+    let segments;
+    let volume;
+
+    const chunkOffset = 3;
+    const liveOffset = 60;
+
+    const utils = {
+        fetchChunkNumbers: function (callback) {
+            const result = {first: null, last: null};
+            utils.fetchChunksBody(streamUrl, body => {
+                result.first = utils.getChunkNumber(body);
+                result.last = utils.getChunkNumber(body, true);
+                callback(result);
+            });
+        },
+        isNumber: function (value) {
+            return typeof value === 'number';
+        },
+        getChunkNumber: function (body, last = false) {
+            try {
+                const isFile = line => line.endsWith('.ts') || line.endsWith('.m3u8');
+                const lines = utils.parseLines(body);
+                const chunk = last
+                    ? lines.filter(line => isFile(line)).pop()
+                    : lines.filter(line => isFile(line))[0];
+
+                return chunk === undefined ? null : utils.parseChunkNumber(chunk)
+            } catch (e) {
+                console.error(e);
+            }
+        },
+        parseChunkNumber: function (chunkName) {
+            chunkName = String(chunkName).split('/').length > 1
+                ? String(chunkName).split('/').pop()
+                : String(chunkName);
+
+            return parseFloat(
+                String(chunkName)
+                    .replace('media_', '')
+                    .replace('.ts', '')
+                    .replace('.m3u8', '')
+                    .replace('segment-', '')
+                    .replace('video_', '')
+            )
+        },
+        parseLines: function (body) {
+            return body.split(/[\r\n]/).filter(item => item.trim().length > 0);
+        },
+        fetchStreamData: function (_url, callback) {
+            fetch(_url)
+                .then(res => res.text())
+                .then(text => callback(text))
+                .catch(err => {
+                    console.error(err);
+                    callback('');
+                });
+        },
+        fetchChunksBody: function (_url, _callback) {
+            try {
+                utils.fetchStreamData(_url, (body) => {
+                    const lines = utils.parseLines(body);
+                    const lastLine = lines[lines.length - 1];
+
+                    if (lastLine.trim().endsWith('chunklist.m3u8')) {
+                        const chunklistUrlSuffix = lastLine.trim().replace('..', '');
+                        const chunklistUrlPrefix = streamUrl.trim().replace('/live/playlist.m3u8', '');
+                        const chunklistUrl = chunklistUrlPrefix + chunklistUrlSuffix;
+
+                        return utils.fetchChunksBody(chunklistUrl, _callback);
+                    } else {
+                        _callback(body);
+                    }
+                });
+            } catch (e) {
+                console.error(e);
+            }
+        },
+        isActualMessage: function (e) {
+            const url = new URL(document.URL);
+            const iframeId = url.searchParams.get('iep_iframe_id');
+            return !!(e.data && typeof e.data.type === 'string' && e.data.type.startsWith('iep_'))
+                && !!(e.data && typeof e.data.iframe_id === 'string' && e.data.iframe_id === iframeId);
+        },
+        sendMessageToParentWindow: function (detail) {
+            const url = new URL(document.URL);
+            detail.iframeId = url.searchParams.get('iep_iframe_id');
+            parent.postMessage(JSON.stringify(detail), "*");
+        },
+        setColors: function (e) {
+            // const colors = e.data.colors;
+            // document.body.style.setProperty('--iep-first-color', colors.first_color);
+            // document.body.style.setProperty('--iep-secondary-color', colors.secondary_color);
+            // document.body.style.setProperty('--iep-third-color', colors.third_color);
+            // document.body.style.setProperty('--iep-fourth-color', colors.fourth_color);
+            // document.body.style.setProperty('--iep-fifth-color', colors.fifth_color);
+        },
+        toggleMobileLayout: function (e) {
+            const isMobile = e.data.payload.isMobile;
+            document.body.classList.toggle('iep-is-mobile', isMobile);
+        },
+        // resetState: function (ended = false) {
+        //     clearInterval(wowzaStreamInterval);
+        //     isWaiting = false;
+        //     hasInterval = false;
+        //     isEnded = ended;
+        // },
+        // startWaiting: function () {
+        //     isWaiting = true;
+        //     utils.sendMessageToParentWindow({type: 'iep_player_waiting'});
+        //     if (!hasInterval) {
+        //         hasInterval = true;
+        //         wowzaStreamInterval = setInterval(utils.checkStreamStatus, 3000);
+        //     }
+        // },
+        checkStreamStatus: function () {
+            utils.fetchChunkNumbers((data) => {
+
+                if ((data.last - chunkOffset) >= currentChunkNumber)
+                {
+                    // theoplayerWowza.reloadCurrentStream();
+                }
+
+                if (!utils.isNumber(currentChunkNumber) && utils.isNumber(data.first))
+                {
+                    currentChunkNumber = data.first;
+                }
+            });
+        },
+    };
+
     window.onInit = () => {
 
         const videoEl = document.createElement('video');
@@ -56,7 +200,7 @@
 
         // https://5d6e17f1ca731.streamlock.net/LowLatencyBBB/myStream/playlist.m3u8
         videoEl.innerHTML = `
-        <source src="https://ll-hls-test.apple.com/llhls1/multi.m3u8" type="application/x-mpegURL">`;
+        <source src="https://5d6e17f1ca731.streamlock.net/LowLatencyBBB/myStream/playlist.m3u8" type="application/x-mpegURL">`;
         document.body.append(videoEl);
 
         window.instance = wwPlayer(videoEl, {
@@ -69,7 +213,28 @@
                     // options.backBufferLength = 90;
                     // options.liveSyncDurationCount = 5;
                     return options;
-                }
+                },
+                onAfterInitHls: hls => {
+                    // onFragParsingMetadata
+                    hls.on(Hls.Events.FRAG_CHANGED,function(event,data) {
+                        const dateTime = data.frag.programDateTime;
+                        const date = new Date(new Date(dateTime).toISOString());
+
+                        console.log('programDateTime-', data.frag.programDateTime);
+
+                        console.log('[FRAG_CHANGED] current dateTime- ', date);
+                    });
+                    hls.on(Hls.Events.MANIFEST_LOADED,function(event,data) {
+                        // console.log('[MANIFEST_LOADED]', parseLines(data.networkDetails.response));
+                        // const playedFirstChunk = utils.getChunkNumber(data.networkDetails.response.body);
+                        // const playedLastChunk = utils.getChunkNumber(data.networkDetails.response.body, true);
+                        // console.log(`available chunks: ${playedFirstChunk}-${playedLastChunk}, current: ${currentChunkNumber}`);
+                    });
+                    // LEVEL_LOADED
+                    hls.on(Hls.Events.LEVEL_LOADED,function(event,data) {
+                        // console.log('[LEVEL_LOADED]', data.details.fragments.map(frag => frag.url));
+                    });
+                },
             },
             layoutControls: {
                 customControls: [
@@ -96,6 +261,11 @@
             },
         });
     };
+
+    function parseLines(body)
+    {
+        return body.split(/[\r\n]/).filter(item => item.trim().length > 0);
+    }
 
     window.onDestroy = () => {
         window.instance.destroy();
